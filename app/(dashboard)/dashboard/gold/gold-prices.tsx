@@ -13,55 +13,54 @@ interface GoldPrice {
 }
 
 interface MarkupSettings {
-  goldSpot: number;
-  gold9999: number;
-  gold965: number;
-  goldAssociation: number;
-  goldSpotAsk: number;
-  gold9999Ask: number;
-  gold965Ask: number;
-  goldAssociationAsk: number;
+  gold_spot_bid: number;
+  gold_spot_ask: number;
+  gold_9999_bid: number;
+  gold_9999_ask: number;
+  gold_965_bid: number;
+  gold_965_ask: number;
+  gold_association_bid: number;
+  gold_association_ask: number;
 }
 
-const getStoredMarkup = (): MarkupSettings => {
-  if (typeof window === 'undefined') return {
-    goldSpot: 0,
-    gold9999: 0,
-    gold965: 0,
-    goldAssociation: 0,
-    goldSpotAsk: 0,
-    gold9999Ask: 0,
-    gold965Ask: 0,
-    goldAssociationAsk: 0,
-  };
-  
-  const stored = localStorage.getItem('markupSettings');
-  return stored ? JSON.parse(stored) : {
-    goldSpot: 0,
-    gold9999: 0,
-    gold965: 0,
-    goldAssociation: 0,
-    goldSpotAsk: 0,
-    gold9999Ask: 0,
-    gold965Ask: 0,
-    goldAssociationAsk: 0,
-  };
+const defaultMarkupSettings: MarkupSettings = {
+  gold_spot_bid: 0,
+  gold_spot_ask: 0,
+  gold_9999_bid: 0,
+  gold_9999_ask: 0,
+  gold_965_bid: 0,
+  gold_965_ask: 0,
+  gold_association_bid: 0,
+  gold_association_ask: 0,
 };
 
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [markupSettings, setMarkupSettings] = useState<MarkupSettings>(getStoredMarkup());
+  const [markupSettings, setMarkupSettings] = useState<MarkupSettings>(defaultMarkupSettings);
+  const [markupLoading, setMarkupLoading] = useState(true);
 
-  // Add a function to listen for storage changes
+  // Fetch markup settings
   useEffect(() => {
-    const handleStorageChange = () => {
-      setMarkupSettings(getStoredMarkup());
-    };
+    async function fetchMarkupSettings() {
+      try {
+        const response = await fetch('/api/markup');
+        if (!response.ok) {
+          throw new Error('Failed to fetch markup settings');
+        }
+        const data = await response.json();
+        setMarkupSettings(data);
+      } catch (err) {
+        console.error('Error fetching markup settings:', err);
+        // Use default settings on error
+        setMarkupSettings(defaultMarkupSettings);
+      } finally {
+        setMarkupLoading(false);
+      }
+    }
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    fetchMarkupSettings();
   }, []);
 
   useEffect(() => {
@@ -80,24 +79,23 @@ export function GoldPrices() {
           
           switch(price.name) {
             case 'GoldSpot':
-              bidMarkup = markupSettings.goldSpot;
-              askMarkup = markupSettings.goldSpotAsk;
+              bidMarkup = markupSettings.gold_spot_bid;
+              askMarkup = markupSettings.gold_spot_ask;
               break;
             case '99.99%':
-              bidMarkup = markupSettings.gold9999;
-              askMarkup = markupSettings.gold9999Ask;
+              bidMarkup = markupSettings.gold_9999_bid;
+              askMarkup = markupSettings.gold_9999_ask;
               break;
             case '96.5%':
-              bidMarkup = markupSettings.gold965;
-              askMarkup = markupSettings.gold965Ask;
+              bidMarkup = markupSettings.gold_965_bid;
+              askMarkup = markupSettings.gold_965_ask;
               break;
             case 'สมาคมฯ':
-              bidMarkup = markupSettings.goldAssociation;
-              askMarkup = markupSettings.goldAssociationAsk;
+              bidMarkup = markupSettings.gold_association_bid;
+              askMarkup = markupSettings.gold_association_ask;
               break;
           }
           
-          // Convert bid and ask to numbers before applying markup
           const numericBid = typeof price.bid === 'string' ? parseFloat(price.bid) : price.bid;
           const numericAsk = typeof price.ask === 'string' ? parseFloat(price.ask) : price.ask;
           
@@ -120,13 +118,15 @@ export function GoldPrices() {
       }
     }
 
-    fetchGoldPrices();
-    // Fetch every 5 minutes
-    const interval = setInterval(fetchGoldPrices, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [markupSettings]); // Add markupSettings as a dependency
+    if (!markupLoading) {
+      fetchGoldPrices();
+      // Fetch every 5 minutes
+      const interval = setInterval(fetchGoldPrices, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [markupSettings, markupLoading]);
 
-  if (loading) {
+  if (loading || markupLoading) {
     return (
       <Card>
         <CardContent className="p-6">

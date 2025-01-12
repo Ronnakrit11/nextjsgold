@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   integer,
+  decimal,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -68,6 +69,20 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
 
+export const markupSettings = pgTable('markup_settings', {
+  id: serial('id').primaryKey(),
+  goldSpotBid: decimal('gold_spot_bid').default('0'),
+  goldSpotAsk: decimal('gold_spot_ask').default('0'),
+  gold9999Bid: decimal('gold_9999_bid').default('0'),
+  gold9999Ask: decimal('gold_9999_ask').default('0'),
+  gold965Bid: decimal('gold_965_bid').default('0'),
+  gold965Ask: decimal('gold_965_ask').default('0'),
+  goldAssociationBid: decimal('gold_association_bid').default('0'),
+  goldAssociationAsk: decimal('gold_association_ask').default('0'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  updatedBy: integer('updated_by').references(() => users.id),
+});
+
 export const teamsRelations = relations(teams, ({ many }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
@@ -77,6 +92,15 @@ export const teamsRelations = relations(teams, ({ many }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
+  markupUpdates: many(markupSettings, { relationName: 'userMarkupUpdates' }),
+}));
+
+export const markupSettingsRelations = relations(markupSettings, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [markupSettings.updatedBy],
+    references: [users.id],
+    relationName: 'userMarkupUpdates',
+  }),
 }));
 
 export const invitationsRelations = relations(invitations, ({ one }) => ({
@@ -122,6 +146,8 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewActivityLog = typeof activityLogs.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
+export type MarkupSetting = typeof markupSettings.$inferSelect;
+export type NewMarkupSetting = typeof markupSettings.$inferInsert;
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;

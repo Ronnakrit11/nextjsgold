@@ -1,13 +1,20 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1726443359662,
-      "tag": "0000_soft_the_anarchist",
-      "breakpoints": true
-    }
-  ]
-}
+    "version": "5",
+    "dialect": "pg",
+    "entries": [
+      {
+        "idx": 0,
+        "version": "5",
+        "when": 1726443359662,
+        "tag": "0000_initial",
+        "breakpoints": true
+      },
+      {
+        "idx": 1,
+        "version": "5",
+        "when": 1726443359663,
+        "tag": "0001_markup_settings",
+        "breakpoints": true
+      }
+    ]
+  }

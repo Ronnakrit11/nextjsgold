@@ -1,64 +1,59 @@
-'use client';
-
+"use client"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tag, Save, ShieldAlert } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
 const ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
 
 interface MarkupSettings {
-  goldSpot: number;
-  gold9999: number;
-  gold965: number;
-  goldAssociation: number;
-  goldSpotAsk: number;
-  gold9999Ask: number;
-  gold965Ask: number;
-  goldAssociationAsk: number;
+  gold_spot_bid: number;
+  gold_spot_ask: number;
+  gold_9999_bid: number;
+  gold_9999_ask: number;
+  gold_965_bid: number;
+  gold_965_ask: number;
+  gold_association_bid: number;
+  gold_association_ask: number;
 }
-
-// Create a simple localStorage wrapper for markup settings
-const getStoredMarkup = (): MarkupSettings => {
-  if (typeof window === 'undefined') return {
-    goldSpot: 0,
-    gold9999: 0,
-    gold965: 0,
-    goldAssociation: 0,
-    goldSpotAsk: 0,
-    gold9999Ask: 0,
-    gold965Ask: 0,
-    goldAssociationAsk: 0,
-  };
-  const stored = localStorage.getItem('markupSettings');
-  return stored ? JSON.parse(stored) : {
-    goldSpot: 0,
-    gold9999: 0,
-    gold965: 0,
-    goldAssociation: 0,
-    goldSpotAsk: 0,
-    gold9999Ask: 0,
-    gold965Ask: 0,
-    goldAssociationAsk: 0,
-  };
-};
 
 export default function SetPricePage() {
   const { user } = useUser();
-  const [markupSettings, setMarkupSettings] = useState<MarkupSettings>(() => 
-    getStoredMarkup()
-  );
+  const [markupSettings, setMarkupSettings] = useState<MarkupSettings>({
+    gold_spot_bid: 0,
+    gold_spot_ask: 0,
+    gold_9999_bid: 0,
+    gold_9999_ask: 0,
+    gold_965_bid: 0,
+    gold_965_ask: 0,
+    gold_association_bid: 0,
+    gold_association_ask: 0,
+  });
 
-  // Redirect to dashboard if user is not logged in
+  useEffect(() => {
+    async function fetchMarkupSettings() {
+      try {
+        const response = await fetch('/api/markup');
+        if (response.ok) {
+          const data = await response.json();
+          setMarkupSettings(data);
+        }
+      } catch (error) {
+        console.error('Error fetching markup settings:', error);
+      }
+    }
+
+    fetchMarkupSettings();
+  }, []);
+
   if (!user) {
     redirect('/sign-in');
   }
 
-  // Show access denied message if user is not the admin
   if (user.email !== ADMIN_EMAIL) {
     return (
       <section className="flex-1 p-4 lg:p-8">
@@ -75,20 +70,42 @@ export default function SetPricePage() {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    localStorage.setItem('markupSettings', JSON.stringify(markupSettings));
-    // Dispatch storage event to notify other components
-    window.dispatchEvent(new Event('storage'));
+    try {
+      const response = await fetch('/api/markup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          goldSpot: markupSettings.gold_spot_bid,
+          goldSpotAsk: markupSettings.gold_spot_ask,
+          gold9999: markupSettings.gold_9999_bid,
+          gold9999Ask: markupSettings.gold_9999_ask,
+          gold965: markupSettings.gold_965_bid,
+          gold965Ask: markupSettings.gold_965_ask,
+          goldAssociation: markupSettings.gold_association_bid,
+          goldAssociationAsk: markupSettings.gold_association_ask,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update markup settings');
+      }
+
+      alert('Markup settings updated successfully');
+    } catch (error) {
+      console.error('Error updating markup settings:', error);
+      alert('Failed to update markup settings');
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Allow empty string to handle backspace when typing negative numbers
-    const newValue = value === '' ? 0 : parseFloat(value);
     setMarkupSettings(prev => ({
       ...prev,
-      [name]: newValue
+      [name]: value === '' ? 0 : parseFloat(value),
     }));
   };
 
@@ -109,141 +126,117 @@ export default function SetPricePage() {
             <div className="grid gap-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="goldSpot">Gold Spot Bid Markup (%)</Label>
+                  <Label htmlFor="gold_spot_bid">Gold Spot Bid Markup (%)</Label>
                   <Input
-                    id="goldSpot"
-                    name="goldSpot"
+                    id="gold_spot_bid"
+                    name="gold_spot_bid"
                     type="number"
                     step="any"
-                    value={markupSettings.goldSpot}
+                    value={markupSettings.gold_spot_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to Gold Spot bid price
-                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="goldSpotAsk">Gold Spot Ask Markup (%)</Label>
+                  <Label htmlFor="gold_spot_ask">Gold Spot Ask Markup (%)</Label>
                   <Input
-                    id="goldSpotAsk"
-                    name="goldSpotAsk"
+                    id="gold_spot_ask"
+                    name="gold_spot_ask"
                     type="number"
                     step="any"
-                    value={markupSettings.goldSpotAsk}
+                    value={markupSettings.gold_spot_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to Gold Spot ask price
-                  </p>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold9999">Gold 99.99% Bid Markup (%)</Label>
+                  <Label htmlFor="gold_9999_bid">Gold 99.99% Bid Markup (%)</Label>
                   <Input
-                    id="gold9999"
-                    name="gold9999"
+                    id="gold_9999_bid"
+                    name="gold_9999_bid"
                     type="number"
                     step="any"
-                    value={markupSettings.gold9999}
+                    value={markupSettings.gold_9999_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to 99.99% gold bid price
-                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="gold9999Ask">Gold 99.99% Ask Markup (%)</Label>
+                  <Label htmlFor="gold_9999_ask">Gold 99.99% Ask Markup (%)</Label>
                   <Input
-                    id="gold9999Ask"
-                    name="gold9999Ask"
+                    id="gold_9999_ask"
+                    name="gold_9999_ask"
                     type="number"
                     step="any"
-                    value={markupSettings.gold9999Ask}
+                    value={markupSettings.gold_9999_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to 99.99% gold ask price
-                  </p>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold965">Gold 96.5% Bid Markup (%)</Label>
+                  <Label htmlFor="gold_965_bid">Gold 96.5% Bid Markup (%)</Label>
                   <Input
-                    id="gold965"
-                    name="gold965"
+                    id="gold_965_bid"
+                    name="gold_965_bid"
                     type="number"
                     step="any"
-                    value={markupSettings.gold965}
+                    value={markupSettings.gold_965_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to 96.5% gold bid price
-                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="gold965Ask">Gold 96.5% Ask Markup (%)</Label>
+                  <Label htmlFor="gold_965_ask">Gold 96.5% Ask Markup (%)</Label>
                   <Input
-                    id="gold965Ask"
-                    name="gold965Ask"
+                    id="gold_965_ask"
+                    name="gold_965_ask"
                     type="number"
                     step="any"
-                    value={markupSettings.gold965Ask}
+                    value={markupSettings.gold_965_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to 96.5% gold ask price
-                  </p>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="goldAssociation">Gold Association Bid Markup (%)</Label>
+                  <Label htmlFor="gold_association_bid">Gold Association Bid Markup (%)</Label>
                   <Input
-                    id="goldAssociation"
-                    name="goldAssociation"
+                    id="gold_association_bid"
+                    name="gold_association_bid"
                     type="number"
                     step="any"
-                    value={markupSettings.goldAssociation}
+                    value={markupSettings.gold_association_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to Gold Association bid price
-                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="goldAssociationAsk">Gold Association Ask Markup (%)</Label>
+                  <Label htmlFor="gold_association_ask">Gold Association Ask Markup (%)</Label>
                   <Input
-                    id="goldAssociationAsk"
-                    name="goldAssociationAsk"
+                    id="gold_association_ask"
+                    name="gold_association_ask"
                     type="number"
                     step="any"
-                    value={markupSettings.goldAssociationAsk}
+                    value={markupSettings.gold_association_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
                     className="mt-1"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Percentage added to Gold Association ask price
-                  </p>
                 </div>
               </div>
             </div>
