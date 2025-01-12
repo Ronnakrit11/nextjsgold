@@ -17,6 +17,8 @@ export default function DashboardLayout({
   const navItems = [
     { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
     { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
+    { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
+
     { href: '/dashboard', icon: Users, label: 'Team' },
     { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
     { href: '/dashboard/general', icon: Settings, label: 'General' },
