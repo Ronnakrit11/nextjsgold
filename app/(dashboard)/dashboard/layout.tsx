@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet } from 'lucide-react';
 
 export default function DashboardLayout({
   children,
@@ -15,6 +15,8 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
+    { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
+    { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
     { href: '/dashboard', icon: Users, label: 'Team' },
     { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
     { href: '/dashboard/general', icon: Settings, label: 'General' },
