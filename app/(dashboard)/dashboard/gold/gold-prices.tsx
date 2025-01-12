@@ -12,10 +12,57 @@ interface GoldPrice {
   diff: string | number;
 }
 
+interface MarkupSettings {
+  goldSpot: number;
+  gold9999: number;
+  gold965: number;
+  goldAssociation: number;
+  goldSpotAsk: number;
+  gold9999Ask: number;
+  gold965Ask: number;
+  goldAssociationAsk: number;
+}
+
+const getStoredMarkup = (): MarkupSettings => {
+  if (typeof window === 'undefined') return {
+    goldSpot: 0,
+    gold9999: 0,
+    gold965: 0,
+    goldAssociation: 0,
+    goldSpotAsk: 0,
+    gold9999Ask: 0,
+    gold965Ask: 0,
+    goldAssociationAsk: 0,
+  };
+  
+  const stored = localStorage.getItem('markupSettings');
+  return stored ? JSON.parse(stored) : {
+    goldSpot: 0,
+    gold9999: 0,
+    gold965: 0,
+    goldAssociation: 0,
+    goldSpotAsk: 0,
+    gold9999Ask: 0,
+    gold965Ask: 0,
+    goldAssociationAsk: 0,
+  };
+};
+
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [markupSettings, setMarkupSettings] = useState<MarkupSettings>(getStoredMarkup());
+
+  // Add a function to listen for storage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setMarkupSettings(getStoredMarkup());
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     async function fetchGoldPrices() {
@@ -25,7 +72,45 @@ export function GoldPrices() {
           throw new Error('Failed to fetch gold prices');
         }
         const data = await response.json();
-        setPrices(data);
+        
+        // Apply markups to the prices
+        const pricesWithMarkup = data.map((price: GoldPrice) => {
+          let bidMarkup = 0;
+          let askMarkup = 0;
+          
+          switch(price.name) {
+            case 'GoldSpot':
+              bidMarkup = markupSettings.goldSpot;
+              askMarkup = markupSettings.goldSpotAsk;
+              break;
+            case '99.99%':
+              bidMarkup = markupSettings.gold9999;
+              askMarkup = markupSettings.gold9999Ask;
+              break;
+            case '96.5%':
+              bidMarkup = markupSettings.gold965;
+              askMarkup = markupSettings.gold965Ask;
+              break;
+            case 'สมาคมฯ':
+              bidMarkup = markupSettings.goldAssociation;
+              askMarkup = markupSettings.goldAssociationAsk;
+              break;
+          }
+          
+          // Convert bid and ask to numbers before applying markup
+          const numericBid = typeof price.bid === 'string' ? parseFloat(price.bid) : price.bid;
+          const numericAsk = typeof price.ask === 'string' ? parseFloat(price.ask) : price.ask;
+          
+          return {
+            ...price,
+            bid: typeof numericBid === 'number' ? 
+              numericBid * (1 + bidMarkup / 100) : numericBid,
+            ask: typeof numericAsk === 'number' ? 
+              numericAsk * (1 + askMarkup / 100) : numericAsk,
+          };
+        });
+
+        setPrices(pricesWithMarkup);
         setError(null);
       } catch (err) {
         setError('Failed to fetch gold prices');
@@ -39,7 +124,7 @@ export function GoldPrices() {
     // Fetch every 5 minutes
     const interval = setInterval(fetchGoldPrices, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [markupSettings]); // Add markupSettings as a dependency
 
   if (loading) {
     return (
@@ -100,13 +185,13 @@ export function GoldPrices() {
                 <div>
                   <p className="text-sm text-gray-500">Bid</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {price.name === "GoldSpot" ? `${price.bid.toLocaleString()} USD` : `${price.bid.toLocaleString()} บาท`}
+                    {price.name === "GoldSpot" ? `${Number(price.bid).toLocaleString()} USD` : `${Number(price.bid).toLocaleString()} บาท`}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Ask</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {price.name === "GoldSpot" ? `${price.ask.toLocaleString()} USD` : `${price.ask.toLocaleString()} บาท`}
+                    {price.name === "GoldSpot" ? `${Number(price.ask).toLocaleString()} USD` : `${Number(price.ask).toLocaleString()} บาท`}
                   </p>
                 </div>
                 <div className="col-span-2 mt-4 flex gap-2">

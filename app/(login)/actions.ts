@@ -26,6 +26,8 @@ import {
   validatedActionWithUser,
 } from '@/lib/auth/middleware';
 
+const ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
+
 async function logActivity(
   teamId: number | null | undefined,
   userId: number,
@@ -116,7 +118,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const newUser: NewUser = {
     email,
     passwordHash,
-    role: 'owner', // Default role, will be overridden if there's an invitation
+    role: email === ADMIN_EMAIL ? 'owner' : 'member',
   };
 
   const [createdUser] = await db.insert(users).values(newUser).returning();
@@ -145,7 +147,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
     if (invitation) {
       teamId = invitation.teamId;
-      userRole = invitation.role;
+      userRole = email === ADMIN_EMAIL ? 'owner' : invitation.role;
 
       await db
         .update(invitations)
@@ -175,7 +177,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     }
 
     teamId = createdTeam.id;
-    userRole = 'owner';
+    userRole = email === ADMIN_EMAIL ? 'owner' : 'member';
 
     await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
   }
@@ -413,9 +415,6 @@ export const inviteTeamMember = validatedActionWithUser(
       user.id,
       ActivityType.INVITE_TEAM_MEMBER
     );
-
-    // TODO: Send invitation email and include ?inviteId={id} to sign-up URL
-    // await sendInvitationEmail(email, userWithTeam.team.name, role)
 
     return { success: 'Invitation sent successfully' };
   }
