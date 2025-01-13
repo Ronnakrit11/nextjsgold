@@ -78,7 +78,7 @@ export function SocialContacts() {
           href={`tel:${settings.phoneNumber}`}
           className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white hover:bg-orange-600 transition-colors"
         >
-          <FontAwesomeIcon icon={faPhone} className="text-xl" />
+          <FontAwesomeIcon icon={faPhone} className="text-xl"/>
         </a>
       )}
     </div>
