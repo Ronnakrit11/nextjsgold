@@ -202,7 +202,7 @@ export function GoldPrices() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-l font-Thin 100 text-gray-900">
                   {price.name === "GoldSpot" ? 
                     `$${Number(price.bid).toLocaleString()}` : 
                     `${Number(price.bid).toLocaleString()} บาท`}
