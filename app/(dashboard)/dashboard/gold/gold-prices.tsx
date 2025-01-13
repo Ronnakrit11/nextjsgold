@@ -34,6 +34,16 @@ const defaultMarkupSettings: MarkupSettings = {
   gold_association_ask: 0,
 };
 
+// List of items to show
+const allowedItems = [
+  'GoldSpot',
+  'Silver',
+  'THB',
+  'สมาคมฯ',
+  '96.5%',
+  '99.99%'
+];
+
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +51,6 @@ export function GoldPrices() {
   const [markupSettings, setMarkupSettings] = useState<MarkupSettings>(defaultMarkupSettings);
   const [markupLoading, setMarkupLoading] = useState(true);
 
-  // Fetch markup settings
   useEffect(() => {
     async function fetchMarkupSettings() {
       try {
@@ -53,7 +62,6 @@ export function GoldPrices() {
         setMarkupSettings(data);
       } catch (err) {
         console.error('Error fetching markup settings:', err);
-        // Use default settings on error
         setMarkupSettings(defaultMarkupSettings);
       } finally {
         setMarkupLoading(false);
@@ -72,43 +80,45 @@ export function GoldPrices() {
         }
         const data = await response.json();
         
-        // Apply markups to the prices
-        const pricesWithMarkup = data.map((price: GoldPrice) => {
-          let bidMarkup = 0;
-          let askMarkup = 0;
-          
-          switch(price.name) {
-            case 'GoldSpot':
-              bidMarkup = markupSettings.gold_spot_bid;
-              askMarkup = markupSettings.gold_spot_ask;
-              break;
-            case '99.99%':
-              bidMarkup = markupSettings.gold_9999_bid;
-              askMarkup = markupSettings.gold_9999_ask;
-              break;
-            case '96.5%':
-              bidMarkup = markupSettings.gold_965_bid;
-              askMarkup = markupSettings.gold_965_ask;
-              break;
-            case 'สมาคมฯ':
-              bidMarkup = markupSettings.gold_association_bid;
-              askMarkup = markupSettings.gold_association_ask;
-              break;
-          }
-          
-          const numericBid = typeof price.bid === 'string' ? parseFloat(price.bid) : price.bid;
-          const numericAsk = typeof price.ask === 'string' ? parseFloat(price.ask) : price.ask;
-          
-          return {
-            ...price,
-            bid: typeof numericBid === 'number' ? 
-              numericBid * (1 + bidMarkup / 100) : numericBid,
-            ask: typeof numericAsk === 'number' ? 
-              numericAsk * (1 + askMarkup / 100) : numericAsk,
-          };
-        });
+        // Filter to show only allowed items and apply markups
+        const filteredPrices = data
+          .filter((price: GoldPrice) => allowedItems.includes(price.name))
+          .map((price: GoldPrice) => {
+            let bidMarkup = 0;
+            let askMarkup = 0;
+            
+            switch(price.name) {
+              case 'GoldSpot':
+                bidMarkup = markupSettings.gold_spot_bid;
+                askMarkup = markupSettings.gold_spot_ask;
+                break;
+              case '99.99%':
+                bidMarkup = markupSettings.gold_9999_bid;
+                askMarkup = markupSettings.gold_9999_ask;
+                break;
+              case '96.5%':
+                bidMarkup = markupSettings.gold_965_bid;
+                askMarkup = markupSettings.gold_965_ask;
+                break;
+              case 'สมาคมฯ':
+                bidMarkup = markupSettings.gold_association_bid;
+                askMarkup = markupSettings.gold_association_ask;
+                break;
+            }
+            
+            const numericBid = typeof price.bid === 'string' ? parseFloat(price.bid) : price.bid;
+            const numericAsk = typeof price.ask === 'string' ? parseFloat(price.ask) : price.ask;
+            
+            return {
+              ...price,
+              bid: typeof numericBid === 'number' ? 
+                numericBid * (1 + bidMarkup / 100) : numericBid,
+              ask: typeof numericAsk === 'number' ? 
+                numericAsk * (1 + askMarkup / 100) : numericAsk,
+            };
+          });
 
-        setPrices(pricesWithMarkup);
+        setPrices(filteredPrices);
         setError(null);
       } catch (err) {
         setError('Failed to fetch gold prices');
@@ -157,7 +167,6 @@ export function GoldPrices() {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {prices.map((price, index) => (
-            price.name !== "Update" && (
             <div
               key={index}
               className="p-4 border rounded-lg bg-white shadow-sm"
@@ -212,7 +221,6 @@ export function GoldPrices() {
                 </div>
               </div>
             </div>
-            )
           ))}
         </div>
       </CardContent>
