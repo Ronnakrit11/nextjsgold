@@ -27,9 +27,11 @@ export default function DashboardLayout({
     setNavItems([
       { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
       { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
-      ...(isAdmin ? [{ href: '/dashboard/set-price', icon: Settings, label: 'Set Price' }] : []),
+      ...(isAdmin ? [
+        { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
+        { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' }
+      ] : []),
       { href: '/dashboard', icon: Users, label: 'Team' },
-      { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
       { href: '/dashboard/general', icon: Settings, label: 'General' },
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
       { href: '/dashboard/security', icon: Shield, label: 'Security' },
