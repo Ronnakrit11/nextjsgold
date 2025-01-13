@@ -8,11 +8,11 @@ export function Terminal() {
   const [copied, setCopied] = useState(false);
   const terminalSteps = [
    
-    'pnpm install',
-    'pnpm db:setup',
-    'pnpm db:migrate',
-    'pnpm db:seed',
-    'pnpm dev 🎉',
+    'ซื้อ GoldSpot 🎉',
+    'ซื้อ ทองคำ 99.99%',
+    'ซื้อ ทองคำ 96.5%',
+    'ซื้อ ทองคำสมาคม',
+   
   ];
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function Terminal() {
               key={index}
               className={`${index > terminalStep ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
             >
-              <span className="text-green-400">$</span> {step}
+              <span className="text-green-400"></span> {step}
             </div>
           ))}
         </div>
