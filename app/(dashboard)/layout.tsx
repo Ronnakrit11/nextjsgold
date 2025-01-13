@@ -31,7 +31,7 @@ function Header() {
     <header className="border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <Image src="/logonew.png" alt="Logo" width={42} height={32} className="h-8 w-auto" />
+          <Image src="/dai.png" alt="Logo" width={120} height={100} className="h-8 w-auto" />
           <span className="ml-2 text-xl font-semibold text-gray-900"></span>
         </Link>
         <div className="flex items-center space-x-4">
@@ -52,7 +52,7 @@ function Header() {
               <DropdownMenuContent align="end" className="flex flex-col gap-1">
                 <DropdownMenuItem className="cursor-pointer">
                   <Link href="/dashboard" className="flex w-full items-center">
-                    <Image src="/logonew.png" alt="Logo" width={16} height={16} className="mr-2 h-4 w-4" />
+                    <Image src="/dai.png" alt="Logo" width={60} height={40} className="mr-2 h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
                 </DropdownMenuItem>
