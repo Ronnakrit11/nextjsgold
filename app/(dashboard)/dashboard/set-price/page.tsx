@@ -118,7 +118,7 @@ export default function SetPricePage() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Tag className="h-6 w-6 text-orange-500" />
-            <span>Gold Price Markup Settings</span>
+            <span>Gold Price  Settings</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -126,7 +126,7 @@ export default function SetPricePage() {
             <div className="grid gap-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_spot_bid">Gold Spot Bid Markup (%)</Label>
+                  <Label htmlFor="gold_spot_bid">Gold Spot Bid  (%)</Label>
                   <Input
                     id="gold_spot_bid"
                     name="gold_spot_bid"
@@ -139,7 +139,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_spot_ask">Gold Spot Ask Markup (%)</Label>
+                  <Label htmlFor="gold_spot_ask">Gold Spot Ask  (%)</Label>
                   <Input
                     id="gold_spot_ask"
                     name="gold_spot_ask"
@@ -155,7 +155,7 @@ export default function SetPricePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_9999_bid">Gold 99.99% Bid Markup (%)</Label>
+                  <Label htmlFor="gold_9999_bid">Gold 99.99% Bid  (%)</Label>
                   <Input
                     id="gold_9999_bid"
                     name="gold_9999_bid"
@@ -168,7 +168,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_9999_ask">Gold 99.99% Ask Markup (%)</Label>
+                  <Label htmlFor="gold_9999_ask">Gold 99.99% Ask  (%)</Label>
                   <Input
                     id="gold_9999_ask"
                     name="gold_9999_ask"
@@ -184,7 +184,7 @@ export default function SetPricePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_965_bid">Gold 96.5% Bid Markup (%)</Label>
+                  <Label htmlFor="gold_965_bid">Gold 96.5% Bid  (%)</Label>
                   <Input
                     id="gold_965_bid"
                     name="gold_965_bid"
@@ -197,7 +197,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_965_ask">Gold 96.5% Ask Markup (%)</Label>
+                  <Label htmlFor="gold_965_ask">Gold 96.5% Ask  (%)</Label>
                   <Input
                     id="gold_965_ask"
                     name="gold_965_ask"
@@ -213,7 +213,7 @@ export default function SetPricePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_association_bid">Gold Association Bid Markup (%)</Label>
+                  <Label htmlFor="gold_association_bid">Gold Association Bid  (%)</Label>
                   <Input
                     id="gold_association_bid"
                     name="gold_association_bid"
@@ -226,7 +226,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_association_ask">Gold Association Ask Markup (%)</Label>
+                  <Label htmlFor="gold_association_ask">Gold Association Ask  (%)</Label>
                   <Input
                     id="gold_association_ask"
                     name="gold_association_ask"
@@ -246,7 +246,7 @@ export default function SetPricePage() {
               className="w-full bg-orange-500 hover:bg-orange-600 text-white"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Markup Settings
+              Save Price Settings
             </Button>
           </form>
         </CardContent>
