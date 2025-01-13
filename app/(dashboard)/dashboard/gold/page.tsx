@@ -15,19 +15,7 @@ export default function GoldPage() {
         <GoldPrices />
       </div>
       
-      <div className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Coins className="h-6 w-6 text-orange-500" />
-              <span>Gold Price Chart</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            
-          </CardContent>
-        </Card>
-      </div>
+     
 
       <Card>
         <CardHeader>

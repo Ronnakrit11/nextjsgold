@@ -202,8 +202,8 @@ export function GoldPrices() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-l font-Thin 100 text-gray-900">
-                  {price.name === "GoldSpot" ? 
+                <p className="text-sm text-gray-500">รับซื้อ
+                   {price.name === "GoldSpot" ? 
                     `$${Number(price.bid).toLocaleString()}` : 
                     `${Number(price.bid).toLocaleString()} บาท`}
                 </p>
@@ -214,11 +214,11 @@ export function GoldPrices() {
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Market Price</p>
+                <p className="text-sm text-gray-500">ราคาขายออก</p>
                 <p className="text-lg font-semibold text-gray-900">
                   {price.name === "GoldSpot" ? 
-                    `$${Number(price.bid).toLocaleString()}` : 
-                    `${Number(price.bid).toLocaleString()} บาท`}
+                    `$${Number(price.ask).toLocaleString()}` : 
+                    `${Number(price.ask).toLocaleString()} บาท`}
                 </p>
               </div>
               <div className="text-right">
