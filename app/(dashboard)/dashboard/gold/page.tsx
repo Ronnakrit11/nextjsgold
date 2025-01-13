@@ -11,6 +11,7 @@ export default function GoldPage() {
       </h1>
       <div className="mb-8">
       <GoldChart />
+      <br />
         <GoldPrices />
       </div>
       
