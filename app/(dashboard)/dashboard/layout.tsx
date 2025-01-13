@@ -24,21 +24,24 @@ export default function DashboardLayout({
   useEffect(() => {
     const isAdmin = user?.email === 'ronnakritnook1@gmail.com';
     
-    setNavItems([
+    const baseItems = [
       { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
       { href: '/dashboard/asset', icon: BarChart2, label: 'Asset' },
       { href: '/dashboard/transaction', icon: FileText, label: 'Transaction' },
       { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
-      ...(isAdmin ? [
-        { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
-        { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
-        { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting' }
-      ] : []),
-      { href: '/dashboard', icon: Users, label: 'Team' },
       { href: '/dashboard/general', icon: Settings, label: 'General' },
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
       { href: '/dashboard/security', icon: Shield, label: 'Security' },
-    ]);
+    ];
+
+    const adminItems = [
+      { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
+      { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
+      { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting' },
+      { href: '/dashboard', icon: Users, label: 'Team' },
+    ];
+
+    setNavItems(isAdmin ? [...baseItems, ...adminItems] : baseItems);
   }, [user]);
 
   return (
