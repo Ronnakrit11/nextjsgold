@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet } from 'lucide-react';
+import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
   children,
@@ -13,11 +14,15 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useUser();
+
+  const isAdmin = user?.email === 'ronnakritnook1@gmail.com';
 
   const navItems = [
     { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
     { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
-    { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
+    // Only show Set Price menu item for admin
+    ...(isAdmin ? [{ href: '/dashboard/set-price', icon: Settings, label: 'Set Price' }] : []),
 
     { href: '/dashboard', icon: Users, label: 'Team' },
     { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
