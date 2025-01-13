@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -15,21 +15,26 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user } = useUser();
+  const [navItems, setNavItems] = useState<Array<{
+    href: string;
+    icon: any;
+    label: string;
+  }>>([]);
 
-  const isAdmin = user?.email === 'ronnakritnook1@gmail.com';
-
-  const navItems = [
-    { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
-    { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
-    // Only show Set Price menu item for admin
-    ...(isAdmin ? [{ href: '/dashboard/set-price', icon: Settings, label: 'Set Price' }] : []),
-
-    { href: '/dashboard', icon: Users, label: 'Team' },
-    { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
-    { href: '/dashboard/general', icon: Settings, label: 'General' },
-    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'Security' },
-  ];
+  useEffect(() => {
+    const isAdmin = user?.email === 'ronnakritnook1@gmail.com';
+    
+    setNavItems([
+      { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
+      { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
+      ...(isAdmin ? [{ href: '/dashboard/set-price', icon: Settings, label: 'Set Price' }] : []),
+      { href: '/dashboard', icon: Users, label: 'Team' },
+      { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
+      { href: '/dashboard/general', icon: Settings, label: 'General' },
+      { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
+      { href: '/dashboard/security', icon: Shield, label: 'Security' },
+    ]);
+  }, [user]);
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
