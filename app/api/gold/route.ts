@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const response = await fetch('http://www.thaigold.info/RealTimeDataV2/gtdata_.txt', {
-      next: { revalidate: 300 }, // Cache for 5 minutes
+      next: { revalidate: 0 }, // Cache for 5 minutes
     });
     
     if (!response.ok) {
