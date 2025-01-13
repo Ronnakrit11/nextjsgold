@@ -208,9 +208,7 @@ export function GoldPrices() {
                     `$${Number(price.bid).toLocaleString()}` : 
                     `${Number(price.bid).toLocaleString()} บาท`}
                 </p>
-                <p className={`text-sm ${Number(price.diff) > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {Number(price.diff) > 0 ? '+' : ''}{Number(price.diff).toFixed(2)}
-                </p>
+              
               </div>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4">
