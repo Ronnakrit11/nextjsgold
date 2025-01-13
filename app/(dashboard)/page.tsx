@@ -2,7 +2,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, CreditCard, Database } from 'lucide-react';
 import { Terminal } from './terminal';
 import { GoldChart } from '@/components/GoldChart';
+import { SocialContacts } from '@/components/SocialContacts';
 import Link from 'next/link';
+
 export default function HomePage() {
   return (
     <main>
@@ -15,13 +17,10 @@ export default function HomePage() {
                 <span className="block text-orange-500">Faster Than Ever</span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-              Gold is the silent witness of time, holding the stories of a thousand years.
+                Gold is the silent witness of time, holding the stories of a thousand years.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                <Link
-                  href="/sign-up"
-                  target="_blank"
-                >
+                <Link href="/sign-up">
                   <Button className="bg-white hover:bg-gray-100 text-black border border-gray-200 rounded-full text-lg px-8 py-4 inline-flex items-center justify-center">
                     Buy Gold
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -104,16 +103,17 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-              Like gold, true value lies in purity and resilience.
+                Like gold, true value lies in purity and resilience.
               </h2>
               <p className="mt-3 max-w-3xl text-lg text-gray-500">
-              Chase your dreams as if they were gold; rare, precious, and worth every effort.
+                Chase your dreams as if they were gold; rare, precious, and worth every effort.
               </p>
             </div>
-       
           </div>
         </div>
       </section>
+
+      <SocialContacts />
     </main>
   );
 }
