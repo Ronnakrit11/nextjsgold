@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Coins } from 'lucide-react';
 import { GoldPrices } from './gold-prices';
+import { GoldChart } from '@/components/GoldChart';
 
 export default function GoldPage() {
   return (
@@ -9,8 +10,24 @@ export default function GoldPage() {
         Gold Dashboard
       </h1>
       <div className="mb-8">
+      <GoldChart />
         <GoldPrices />
       </div>
+      
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Coins className="h-6 w-6 text-orange-500" />
+              <span>Gold Price Chart</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
