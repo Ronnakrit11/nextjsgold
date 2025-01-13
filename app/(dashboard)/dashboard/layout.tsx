@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -26,6 +26,8 @@ export default function DashboardLayout({
     
     setNavItems([
       { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
+      { href: '/dashboard/asset', icon: BarChart2, label: 'Asset' },
+      { href: '/dashboard/transaction', icon: FileText, label: 'Transaction' },
       { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
       ...(isAdmin ? [
         { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
@@ -82,7 +84,7 @@ export default function DashboardLayout({
           </nav>
         </aside>
 
-        {/* Main contednt */}
+        {/* Main content */}
         <main className="flex-1 overflow-y-auto p-0 lg:p-4">{children}</main>
       </div>
     </div>
