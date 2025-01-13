@@ -1,20 +1,13 @@
 {
-    "version": "5",
-    "dialect": "pg",
-    "entries": [
-      {
-        "idx": 0,
-        "version": "5",
-        "when": 1726443359662,
-        "tag": "0000_initial",
-        "breakpoints": true
-      },
-      {
-        "idx": 1,
-        "version": "5",
-        "when": 1726443359663,
-        "tag": "0001_markup_settings",
-        "breakpoints": true
-      }
-    ]
-  }
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1736775286879,
+      "tag": "0000_small_dust",
+      "breakpoints": true
+    }
+  ]
+}

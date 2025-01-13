@@ -3,6 +3,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebookF } from '@fortawesome/free-brands-svg-icons';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useState } from 'react';
 
 // Custom Line icon as SVG
 function LineIcon() {
@@ -18,32 +19,68 @@ function LineIcon() {
 }
 
 export function SocialContacts() {
+  const [settings, setSettings] = useState({
+    facebookLink: '',
+    lineOaLink: '',
+    phoneNumber: ''
+  });
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const response = await fetch('/api/social-settings');
+        if (response.ok) {
+          const data = await response.json();
+          setSettings({
+            facebookLink: data.facebook_link || '',
+            lineOaLink: data.line_oa_link || '',
+            phoneNumber: data.phone_number || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching social settings:', error);
+      }
+    }
+
+    fetchSettings();
+  }, []);
+
+  if (!settings.facebookLink && !settings.lineOaLink && !settings.phoneNumber) {
+    return null;
+  }
+
   return (
     <div className="fixed bottom-8 right-8 flex flex-col gap-4">
-      <a
-        href="https://facebook.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
-      >
-        <FontAwesomeIcon icon={faFacebookF} className="text-xl" />
-      </a>
+      {settings.facebookLink && (
+        <a
+          href={settings.facebookLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+        >
+          <FontAwesomeIcon icon={faFacebookF} className="text-xl" />
+        </a>
+      )}
       
-      <a
-        href="https://line.me"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-colors"
-      >
-        <LineIcon />
-      </a>
+      {settings.lineOaLink && (
+        <a
+          href={settings.lineOaLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white hover:bg-green-600 transition-colors"
+        >
+          <LineIcon />
+        </a>
+      )}
       
-      <a
-        href="tel:+66123456789"
-        className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white hover:bg-orange-600 transition-colors"
-      >
-        <FontAwesomeIcon icon={faPhone} className="text-xl" />
-      </a>
+      {settings.phoneNumber && (
+        <a
+          href={`tel:${settings.phoneNumber}`}
+          className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white hover:bg-orange-600 transition-colors"
+        >
+          <FontAwesomeIcon icon={faPhone} className="text-xl" />
+        </a>
+      )}
     </div>
   );
 }

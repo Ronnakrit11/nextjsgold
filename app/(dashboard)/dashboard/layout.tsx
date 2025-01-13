@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -31,7 +31,8 @@ export default function DashboardLayout({
       { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
       ...(isAdmin ? [
         { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
-        { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' }
+        { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
+        { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting' }
       ] : []),
       { href: '/dashboard', icon: Users, label: 'Team' },
       { href: '/dashboard/general', icon: Settings, label: 'General' },

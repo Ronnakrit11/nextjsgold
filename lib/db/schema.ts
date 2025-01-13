@@ -166,3 +166,24 @@ export enum ActivityType {
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
 }
+
+
+export const socialSettings = pgTable('social_settings', {
+  id: serial('id').primaryKey(),
+  facebookLink: text('facebook_link').default(''),
+  lineOaLink: text('line_oa_link').default(''),
+  phoneNumber: text('phone_number').default(''),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  updatedBy: integer('updated_by').references(() => users.id),
+});
+
+export const socialSettingsRelations = relations(socialSettings, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [socialSettings.updatedBy],
+    references: [users.id],
+  }),
+}));
+
+// Add these types to your existing type exports
+export type SocialSetting = typeof socialSettings.$inferSelect;
+export type NewSocialSetting = typeof socialSettings.$inferInsert;
