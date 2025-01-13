@@ -205,7 +205,7 @@ export function GoldPrices() {
                 <p className="text-2xl font-bold text-gray-900">
                   {price.name === "GoldSpot" ? 
                     `$${Number(price.bid).toLocaleString()}` : 
-                    `${Number(price.bid).toLocaleString()}฿`}
+                    `${Number(price.bid).toLocaleString()} บาท`}
                 </p>
                 <p className={`text-sm ${Number(price.diff) > 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {Number(price.diff) > 0 ? '+' : ''}{Number(price.diff).toFixed(2)}
@@ -218,7 +218,7 @@ export function GoldPrices() {
                 <p className="text-lg font-semibold text-gray-900">
                   {price.name === "GoldSpot" ? 
                     `$${Number(price.bid).toLocaleString()}` : 
-                    `฿${Number(price.bid).toLocaleString()}`}
+                    `${Number(price.bid).toLocaleString()} บาท`}
                 </p>
               </div>
               <div className="text-right">
