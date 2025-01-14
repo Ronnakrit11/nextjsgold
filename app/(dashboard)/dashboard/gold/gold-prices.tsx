@@ -16,22 +16,33 @@ interface GoldPrice {
   diff: string | number;
 }
 
+interface GoldAsset {
+  goldType: string;
+  amount: string;
+  purchasePrice: string;
+}
+
+interface TransactionSummary {
+  goldType: string;
+  units: number;
+  price: number;
+  total: number;
+  isSell?: boolean;
+}
+
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [balance, setBalance] = useState(0);
+  const [assets, setAssets] = useState<GoldAsset[]>([]);
   const [selectedPrice, setSelectedPrice] = useState<GoldPrice | null>(null);
   const [isBuyDialogOpen, setIsBuyDialogOpen] = useState(false);
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
   const [moneyAmount, setMoneyAmount] = useState('');
+  const [sellUnits, setSellUnits] = useState('');
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
-  const [transactionSummary, setTransactionSummary] = useState<{
-    goldType: string;
-    units: number;
-    price: number;
-    total: number;
-  } | null>(null);
+  const [transactionSummary, setTransactionSummary] = useState<TransactionSummary | null>(null);
 
   const formatDateTime = (date: Date) => {
     return new Intl.DateTimeFormat('th-TH', {
@@ -45,12 +56,41 @@ export function GoldPrices() {
     }).format(date);
   };
 
+  const getPortfolioSummary = (goldType: string) => {
+    const asset = assets.find(a => a.goldType === goldType);
+    return {
+      units: asset ? Number(asset.amount) : 0,
+      value: asset ? Number(asset.amount) * Number(asset.purchasePrice) : 0
+    };
+  };
+
   async function fetchData() {
     try {
       // Fetch user balance
       const balanceResponse = await fetch('/api/user/balance');
       const balanceData = await balanceResponse.json();
       setBalance(Number(balanceData.balance));
+
+      // Fetch gold assets
+      const assetsResponse = await fetch('/api/transactions/history');
+      const assetsData = await assetsResponse.json();
+      
+      // Combine same gold types
+      const combinedAssets = assetsData.reduce((acc: GoldAsset[], curr: GoldAsset) => {
+        const existingAsset = acc.find(asset => asset.goldType === curr.goldType);
+        if (existingAsset) {
+          existingAsset.amount = (Number(existingAsset.amount) + Number(curr.amount)).toString();
+          const totalValue = Number(existingAsset.amount) * Number(existingAsset.purchasePrice) + 
+                           Number(curr.amount) * Number(curr.purchasePrice);
+          const totalUnits = Number(existingAsset.amount) + Number(curr.amount);
+          existingAsset.purchasePrice = (totalValue / totalUnits).toString();
+        } else {
+          acc.push({ ...curr });
+        }
+        return acc;
+      }, []);
+
+      setAssets(combinedAssets);
 
       // Fetch gold prices
       const pricesResponse = await fetch('/api/gold');
@@ -79,7 +119,7 @@ export function GoldPrices() {
 
   const handleSellClick = (price: GoldPrice) => {
     setSelectedPrice(price);
-    setMoneyAmount('');
+    setSellUnits('');
     setIsSellDialogOpen(true);
   };
 
@@ -119,7 +159,9 @@ export function GoldPrices() {
         throw new Error('Failed to process purchase');
       }
 
-      setBalance(prev => prev - moneyNum);
+      const data = await response.json();
+      setBalance(data.balance);
+      await fetchData(); // Refresh assets
       
       setTransactionSummary({
         goldType,
@@ -137,25 +179,34 @@ export function GoldPrices() {
   };
 
   const handleSellSubmit = async () => {
-    if (!selectedPrice || !moneyAmount) return;
+    if (!selectedPrice || !sellUnits) return;
 
     try {
-      const moneyNum = parseFloat(moneyAmount);
+      const units = parseFloat(sellUnits);
       const pricePerUnit = typeof selectedPrice.bid === 'string' ? 
         parseFloat(selectedPrice.bid) : selectedPrice.bid;
-      const units = moneyNum / pricePerUnit;
+      const totalAmount = units * pricePerUnit;
+
+      const goldType = selectedPrice.name === 'GoldSpot' ? 'GoldSpot' :
+                      selectedPrice.name === '99.99%' ? 'ทอง 99.99%' :
+                      selectedPrice.name === '96.5%' ? 'ทอง 96.5%' :
+                      'ทองสมาคม';
+
+      // Check if user has enough units to sell
+      const currentAsset = assets.find(a => a.goldType === goldType);
+      if (!currentAsset || Number(currentAsset.amount) < units) {
+        toast.error('จำนวนทองไม่เพียงพอ');
+        return;
+      }
 
       const response = await fetch('/api/transactions/sell', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          goldType: selectedPrice.name === 'GoldSpot' ? 'GoldSpot' :
-                   selectedPrice.name === '99.99%' ? 'ทอง 99.99%' :
-                   selectedPrice.name === '96.5%' ? 'ทอง 96.5%' :
-                   'ทองสมาคม',
+          goldType,
           amount: units,
           pricePerUnit,
-          totalPrice: moneyNum
+          totalPrice: totalAmount
         })
       });
 
@@ -163,8 +214,21 @@ export function GoldPrices() {
         throw new Error('Failed to process sale');
       }
 
-      toast.success('ขายทองสำเร็จ');
+      const data = await response.json();
+      setBalance(data.balance);
+      await fetchData(); // Refresh assets
+
+      setTransactionSummary({
+        goldType,
+        units,
+        price: pricePerUnit,
+        total: totalAmount,
+        isSell: true
+      });
+
       setIsSellDialogOpen(false);
+      setShowSummaryDialog(true);
+      toast.success('ขายทองสำเร็จ');
     } catch (error) {
       toast.error('เกิดข้อผิดพลาดในการขายทอง');
     }
@@ -178,7 +242,7 @@ export function GoldPrices() {
           <div className="text-white">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm opacity-80">ยอดเงินคงเหลือ</p>
+                <p className="text-sm opacity-80">เงินสดในพอร์ต</p>
                 <p className="text-3xl font-bold">฿{balance.toLocaleString()}</p>
               </div>
             </div>
@@ -216,6 +280,20 @@ export function GoldPrices() {
                   {price.name !== "THB" && (
                     <p className="text-sm text-gray-500">0.027 oz</p>
                   )}
+                  {(() => {
+                    const goldType = price.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                                   price.name === "99.99%" ? "ทอง 99.99%" : 
+                                   price.name === "96.5%" ? "ทอง 96.5%" : 
+                                   price.name;
+                    const summary = getPortfolioSummary(goldType);
+                    if (summary.units > 0) {
+                      return (
+                        <p className="text-sm text-orange-600">
+                          พอร์ต: {summary.units.toFixed(4)} หน่วย
+                        </p>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -288,7 +366,7 @@ export function GoldPrices() {
               <div className="space-y-2">
                 <Label>จำนวนทอง</Label>
                 <p className="text-lg font-semibold">
-                  {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} บาท
+                  {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} หน่วย
                 </p>
               </div>
             )}
@@ -310,26 +388,52 @@ export function GoldPrices() {
             <DialogTitle>ขายทอง</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {selectedPrice && (() => {
+              const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                              selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
+                              selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
+                              selectedPrice.name;
+              const summary = getPortfolioSummary(goldType);
+              return (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">ทองในพอร์ต</p>
+                  <p className="text-lg font-semibold">{summary.units.toFixed(4)} หน่วย</p>
+                </div>
+              );
+            })()}
             <div className="space-y-2">
-              <Label>จำนวนเงิน</Label>
+              <Label>จำนวนหน่วยที่ต้องการขาย</Label>
               <Input
                 type="number"
-                value={moneyAmount}
-                onChange={(e) => setMoneyAmount(e.target.value)}
-                placeholder="ระบุจำนวนเงินที่ต้องการขาย"
+                value={sellUnits}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (selectedPrice) {
+                    const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                                    selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
+                                    selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
+                                    selectedPrice.name;
+                    const summary = getPortfolioSummary(goldType);
+                    if (value === '' || Number(value) <= summary.units) {
+                      setSellUnits(value);
+                    }
+                  }
+                }}
+                placeholder="ระบุจำนวนหน่วยที่ต้องการขาย"
               />
             </div>
-            {moneyAmount && selectedPrice && (
+            {sellUnits && selectedPrice && (
               <div className="space-y-2">
-                <Label>จำนวนทอง</Label>
-                <p className="text-lg font-semibold">
-                  {(Number(moneyAmount) / Number(selectedPrice.bid)).toFixed(4)} บาท
+                <Label>จำนวนเงินที่จะได้รับ</Label>
+                <p className="text-lg font-semibold text-green-600">
+                  ฿{(Number(sellUnits) * Number(selectedPrice.bid)).toLocaleString()}
                 </p>
               </div>
             )}
             <Button
               onClick={handleSellSubmit}
               className="w-full bg-red-500 hover:bg-red-600 text-white"
+              disabled={!sellUnits || Number(sellUnits) <= 0}
             >
               ยืนยันการขาย
             </Button>
@@ -344,7 +448,9 @@ export function GoldPrices() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>สรุปรายการซื้อทอง</DialogTitle>
+            <DialogTitle>
+              {transactionSummary?.isSell ? 'สรุปรายการขายทอง' : 'สรุปรายการซื้อทอง'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {transactionSummary && (
@@ -361,18 +467,20 @@ export function GoldPrices() {
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">จำนวนทอง</span>
-                    <span className="font-medium">{transactionSummary.units.toFixed(4)} บาท</span>
+                    <span className="font-medium">{transactionSummary.units.toFixed(4)} หน่วย</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-gray-600">ราคาต่อบาท</span>
+                    <span className="text-gray-600">ราคาต่อหน่วย</span>
                     <span className="font-medium">฿{transactionSummary.price.toLocaleString()}</span>
                   </div>
                   
                   <div className="border-t pt-3">
                     <div className="flex justify-between text-lg font-semibold">
-                      <span>ยอดรวมทั้งสิ้น</span>
-                      <span className="text-green-600">฿{transactionSummary.total.toLocaleString()}</span>
+                      <span>{transactionSummary.isSell ? 'ได้รับเงิน' : 'ยอดชำระ'}</span>
+                      <span className={transactionSummary.isSell ? 'text-green-600' : 'text-red-600'}>
+                        ฿{transactionSummary.total.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
