@@ -19,8 +19,7 @@ interface GoldPrice {
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [lastUpdate, setLastUpdate] = useState<string>('');
   const [selectedPrice, setSelectedPrice] = useState<GoldPrice | null>(null);
   const [isBuyDialogOpen, setIsBuyDialogOpen] = useState(false);
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
@@ -46,6 +45,18 @@ export function GoldPrices() {
         const pricesResponse = await fetch('/api/gold');
         const pricesData = await pricesResponse.json();
         setPrices(pricesData);
+        
+        // Format the date immediately and store as string
+        const now = new Date();
+        const formatted = now.toLocaleString('th-TH', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        setLastUpdate(formatted);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -106,7 +117,6 @@ export function GoldPrices() {
 
       setBalance(prev => prev - moneyNum);
       
-      // Set transaction summary and show dialog
       setTransactionSummary({
         goldType,
         units,
@@ -158,6 +168,11 @@ export function GoldPrices() {
 
   return (
     <div className="space-y-4">
+      {/* Last Update Display */}
+      <div className="text-right text-sm text-gray-600">
+        Last Update: {lastUpdate}
+      </div>
+
       {/* Balance Display */}
       <Card className="bg-gradient-to-r from-orange-500 to-orange-600">
         <CardContent className="p-6">

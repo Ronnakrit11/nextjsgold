@@ -124,20 +124,12 @@ export default function AssetPage() {
               </div>
               <div className="flex gap-8">
                 <div className="text-center">
-                  <p className="text-xl font-semibold text-gray-900">
-                    ฿{balance.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Cash Balance
-                  </p>
+                
+                 
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-semibold text-gray-900">
-                    ฿{totalAssetValue.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Asset Value
-                  </p>
+                
+                
                 </div>
               </div>
             </div>
