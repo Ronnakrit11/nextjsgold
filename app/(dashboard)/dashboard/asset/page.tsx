@@ -177,7 +177,7 @@ export default function AssetPage() {
                       <div>
                         <h3 className="font-medium text-lg">{asset.goldType}</h3>
                         <p className="text-sm text-gray-500">
-                          {Number(asset.amount).toFixed(4)} หน่วย
+                          {Number(asset.amount).toFixed(4)} บาท
                         </p>
                       </div>
                       <div className="text-right">
