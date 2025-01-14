@@ -15,6 +15,13 @@
       "when": 1736834688474,
       "tag": "0001_slimy_whirlwind",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1736835855803,
+      "tag": "0002_wakeful_black_bird",
+      "breakpoints": true
     }
   ]
 }

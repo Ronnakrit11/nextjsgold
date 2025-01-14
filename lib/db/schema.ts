@@ -83,16 +83,48 @@ export const markupSettings = pgTable('markup_settings', {
   updatedBy: integer('updated_by').references(() => users.id),
 });
 
+export const socialSettings = pgTable('social_settings', {
+  id: serial('id').primaryKey(),
+  facebookLink: text('facebook_link').default(''),
+  lineOaLink: text('line_oa_link').default(''),
+  phoneNumber: text('phone_number').default(''),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  updatedBy: integer('updated_by').references(() => users.id),
+});
+
+export const verifiedSlips = pgTable('verified_slips', {
+  id: serial('id').primaryKey(),
+  transRef: text('trans_ref').notNull().unique(),
+  amount: decimal('amount').notNull(),
+  verifiedAt: timestamp('verified_at').notNull().defaultNow(),
+  userId: integer('user_id').references(() => users.id),
+});
+
+export const userBalances = pgTable('user_balances', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id)
+    .unique(),
+  balance: decimal('balance').notNull().default('0'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Relations
 export const teamsRelations = relations(teams, ({ many }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
   invitations: many(invitations),
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
   markupUpdates: many(markupSettings, { relationName: 'userMarkupUpdates' }),
+  balance: one(userBalances, {
+    fields: [users.id],
+    references: [userBalances.userId],
+  }),
 }));
 
 export const markupSettingsRelations = relations(markupSettings, ({ one }) => ({
@@ -100,6 +132,13 @@ export const markupSettingsRelations = relations(markupSettings, ({ one }) => ({
     fields: [markupSettings.updatedBy],
     references: [users.id],
     relationName: 'userMarkupUpdates',
+  }),
+}));
+
+export const socialSettingsRelations = relations(socialSettings, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [socialSettings.updatedBy],
+    references: [users.id],
   }),
 }));
 
@@ -136,6 +175,7 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }));
 
+// Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Team = typeof teams.$inferSelect;
@@ -148,6 +188,12 @@ export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 export type MarkupSetting = typeof markupSettings.$inferSelect;
 export type NewMarkupSetting = typeof markupSettings.$inferInsert;
+export type SocialSetting = typeof socialSettings.$inferSelect;
+export type NewSocialSetting = typeof socialSettings.$inferInsert;
+export type VerifiedSlip = typeof verifiedSlips.$inferSelect;
+export type NewVerifiedSlip = typeof verifiedSlips.$inferInsert;
+export type UserBalance = typeof userBalances.$inferSelect;
+export type NewUserBalance = typeof userBalances.$inferInsert;
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;
@@ -166,35 +212,3 @@ export enum ActivityType {
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
 }
-
-
-export const socialSettings = pgTable('social_settings', {
-  id: serial('id').primaryKey(),
-  facebookLink: text('facebook_link').default(''),
-  lineOaLink: text('line_oa_link').default(''),
-  phoneNumber: text('phone_number').default(''),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  updatedBy: integer('updated_by').references(() => users.id),
-});
-
-export const socialSettingsRelations = relations(socialSettings, ({ one }) => ({
-  updatedByUser: one(users, {
-    fields: [socialSettings.updatedBy],
-    references: [users.id],
-  }),
-}));
-
-// Add these types to your existing type exports
-export type SocialSetting = typeof socialSettings.$inferSelect;
-export type NewSocialSetting = typeof socialSettings.$inferInsert;
-
-export const verifiedSlips = pgTable('verified_slips', {
-  id: serial('id').primaryKey(),
-  transRef: text('trans_ref').notNull().unique(),
-  amount: decimal('amount').notNull(),
-  verifiedAt: timestamp('verified_at').notNull().defaultNow(),
-  userId: integer('user_id').references(() => users.id),
-});
-
-export type VerifiedSlip = typeof verifiedSlips.$inferSelect;
-export type NewVerifiedSlip = typeof verifiedSlips.$inferInsert;

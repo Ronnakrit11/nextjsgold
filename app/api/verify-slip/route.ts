@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { verifiedSlips } from '@/lib/db/schema';
+import { verifiedSlips, userBalances } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 
@@ -120,10 +120,39 @@ async function checkSlipAlreadyUsed(transRef: string): Promise<boolean> {
 }
 
 async function recordVerifiedSlip(transRef: string, amount: number, userId: number | null) {
-  await db.insert(verifiedSlips).values({
-    transRef: transRef,
-    amount: amount.toString(), // Convert number to string for decimal type
-    userId: userId,
+  await db.transaction(async (tx) => {
+    // Record the verified slip
+    await tx.insert(verifiedSlips).values({
+      transRef: transRef,
+      amount: amount.toString(),
+      userId: userId,
+    });
+
+    if (userId) {
+      // Get current balance or create new balance record
+      const currentBalance = await tx
+        .select()
+        .from(userBalances)
+        .where(eq(userBalances.userId, userId))
+        .limit(1);
+
+      if (currentBalance.length === 0) {
+        // Create new balance record
+        await tx.insert(userBalances).values({
+          userId: userId,
+          balance: amount.toString(),
+        });
+      } else {
+        // Update existing balance
+        await tx
+          .update(userBalances)
+          .set({
+            balance: (Number(currentBalance[0].balance) + amount).toString(),
+            updatedAt: new Date(),
+          })
+          .where(eq(userBalances.userId, userId));
+      }
+    }
   });
 }
 
@@ -214,7 +243,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({ status: 200, message: 'success' });
   } catch (error) {
     console.error('Error verifying slip:', error);
     return NextResponse.json(
