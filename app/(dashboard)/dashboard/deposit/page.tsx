@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Wallet, CreditCard, Upload, Loader2 } from 'lucide-react';
+import { Wallet, Upload, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useUser } from '@/lib/auth';
+import Image from 'next/image';
 
 interface VerifiedSlip {
   id: number;
@@ -116,7 +117,6 @@ export default function DepositPage() {
     {
       id: 'bank',
       name: 'Bank Transfer',
-      icon: CreditCard,
       accountInfo: 'Bank: 131-8-09271-7\nนายรนกฤต เชียรวิชัย'
     }
   ];
@@ -174,10 +174,18 @@ export default function DepositPage() {
                       }`}
                       onClick={() => setSelectedMethod(method.id)}
                     >
-                      <method.icon className="h-5 w-5" />
-                      <div className="flex flex-col items-start">
-                        <span>{method.name}</span>
-                        <span className="text-sm opacity-75 whitespace-pre-line">{method.accountInfo}</span>
+                      <div className="flex items-center space-x-4 w-full">
+                        <Image 
+                          src="/kbank-logo.jpg" 
+                          alt="Kbank Logo" 
+                          width={70} 
+                          height={60}
+                          className="rounded-md"
+                        />
+                        <div className="flex flex-col items-start">
+                          <span>{method.name}</span>
+                          <span className="text-sm opacity-75 whitespace-pre-line">{method.accountInfo}</span>
+                        </div>
                       </div>
                     </Button>
                   ))}
