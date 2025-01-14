@@ -19,12 +19,12 @@ interface GoldPrice {
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [balance, setBalance] = useState(0);
   const [selectedPrice, setSelectedPrice] = useState<GoldPrice | null>(null);
   const [isBuyDialogOpen, setIsBuyDialogOpen] = useState(false);
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
   const [moneyAmount, setMoneyAmount] = useState('');
-  const [balance, setBalance] = useState(0);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [transactionSummary, setTransactionSummary] = useState<{
     goldType: string;
@@ -33,38 +33,42 @@ export function GoldPrices() {
     total: number;
   } | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch user balance
-        const balanceResponse = await fetch('/api/user/balance');
-        const balanceData = await balanceResponse.json();
-        setBalance(Number(balanceData.balance));
+  const formatDateTime = (date: Date) => {
+    return new Intl.DateTimeFormat('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(date);
+  };
 
-        // Fetch gold prices
-        const pricesResponse = await fetch('/api/gold');
-        const pricesData = await pricesResponse.json();
-        setPrices(pricesData);
-        
-        // Format the date immediately and store as string
-        const now = new Date();
-        const formatted = now.toLocaleString('th-TH', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-        setLastUpdate(formatted);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
+  async function fetchData() {
+    try {
+      // Fetch user balance
+      const balanceResponse = await fetch('/api/user/balance');
+      const balanceData = await balanceResponse.json();
+      setBalance(Number(balanceData.balance));
+
+      // Fetch gold prices
+      const pricesResponse = await fetch('/api/gold');
+      const pricesData = await pricesResponse.json();
+      setPrices(pricesData);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
     fetchData();
+    // Set up polling every 5 seconds
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleBuyClick = (price: GoldPrice) => {
@@ -168,20 +172,24 @@ export function GoldPrices() {
 
   return (
     <div className="space-y-4">
-      {/* Last Update Display */}
-      <div className="text-right text-sm text-gray-600">
-        Last Update: {lastUpdate}
-      </div>
-
       {/* Balance Display */}
       <Card className="bg-gradient-to-r from-orange-500 to-orange-600">
         <CardContent className="p-6">
           <div className="text-white">
-            <p className="text-sm opacity-80">ยอดเงินคงเหลือ</p>
-            <p className="text-3xl font-bold">฿{balance.toLocaleString()}</p>
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm opacity-80">ยอดเงินคงเหลือ</p>
+                <p className="text-3xl font-bold">฿{balance.toLocaleString()}</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Last Update Time Display */}
+      <div className="text-center text-gray-600 text-sm -mt-2 mb-2">
+        อัพเดทล่าสุด: {formatDateTime(lastUpdate)}
+      </div>
 
       {/* Gold Price Cards */}
       {prices.map((price, index) => (
