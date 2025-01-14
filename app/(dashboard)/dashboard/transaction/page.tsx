@@ -3,20 +3,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useUser } from '@/lib/auth';
 
 interface Transaction {
   id: number;
-  userId: number;
   goldType: string;
   amount: string;
   purchasePrice: string;
   createdAt: string;
   updatedAt: string;
+  user?: {
+    id: number;
+    name: string | null;
+    email: string;
+  };
 }
 
 export default function TransactionPage() {
+  const { user } = useUser();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const isAdmin = user?.email === 'ronnakritnook1@gmail.com';
 
   useEffect(() => {
     async function fetchTransactions() {
@@ -45,7 +52,7 @@ export default function TransactionPage() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <FileText className="h-6 w-6 text-orange-500" />
-            <span>Your Transactions</span>
+            <span>{isAdmin ? 'All User Transactions' : 'Your Transactions'}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -66,6 +73,11 @@ export default function TransactionPage() {
                       <p className="font-medium text-gray-900">
                         ซื้อ {transaction.goldType}
                       </p>
+                      {isAdmin && transaction.user && (
+                        <p className="text-sm text-orange-600">
+                          by {transaction.user.name || transaction.user.email}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-500">
                         {new Date(transaction.createdAt).toLocaleString('th-TH')}
                       </p>
