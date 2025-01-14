@@ -28,7 +28,8 @@ export async function POST(request: Request) {
 
     // Create payload for the API
     const payload = {
-      payload: base64
+      payload: base64,
+      amount: parseFloat(amount as string)
     };
 
     // Basic auth credentials
@@ -46,10 +47,7 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      return NextResponse.json(
-        { error: errorData.message || 'Verification failed' },
-        { status: response.status }
-      );
+      throw new Error(errorData.message || 'Verification failed');
     }
 
     const data = await response.json();
@@ -65,8 +63,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error verifying slip:', error);
     return NextResponse.json(
-      { error: 'Internal server error', message: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { 
+        error: 'Verification failed', 
+        message: error instanceof Error ? error.message : 'Invalid QR Payload or not Slip Verify API QR'
+      },
+      { status: 400 }
     );
   }
 }
