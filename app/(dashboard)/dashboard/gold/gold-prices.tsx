@@ -1,20 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 
 interface GoldPrice {
   name: string;
@@ -23,248 +16,159 @@ interface GoldPrice {
   diff: string | number;
 }
 
-interface MarkupSettings {
-  gold_spot_bid: number;
-  gold_spot_ask: number;
-  gold_9999_bid: number;
-  gold_9999_ask: number;
-  gold_965_bid: number;
-  gold_965_ask: number;
-  gold_association_bid: number;
-  gold_association_ask: number;
-}
-
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [markupSettings, setMarkupSettings] = useState<MarkupSettings>({
-    gold_spot_bid: 0,
-    gold_spot_ask: 0,
-    gold_9999_bid: 0,
-    gold_9999_ask: 0,
-    gold_965_bid: 0,
-    gold_965_ask: 0,
-    gold_association_bid: 0,
-    gold_association_ask: 0,
-  });
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [updating, setUpdating] = useState(false);
-  const [buyDialogOpen, setBuyDialogOpen] = useState(false);
-  const [sellDialogOpen, setSellDialogOpen] = useState(false);
-  const [selectedGold, setSelectedGold] = useState<GoldPrice | null>(null);
-  const [amount, setAmount] = useState('');
-  const [processing, setProcessing] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [selectedPrice, setSelectedPrice] = useState<GoldPrice | null>(null);
+  const [isBuyDialogOpen, setIsBuyDialogOpen] = useState(false);
+  const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
+  const [moneyAmount, setMoneyAmount] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [transactionSummary, setTransactionSummary] = useState<{
+    goldType: string;
+    units: number;
+    price: number;
+    total: number;
+  } | null>(null);
 
   useEffect(() => {
-    async function fetchMarkupSettings() {
+    async function fetchData() {
       try {
-        const response = await fetch('/api/markup');
-        if (!response.ok) {
-          throw new Error('Failed to fetch markup settings');
-        }
-        const data = await response.json();
-        setMarkupSettings(data);
-      } catch (err) {
-        console.error('Error fetching markup settings:', err);
-        setMarkupSettings({
-          gold_spot_bid: 0,
-          gold_spot_ask: 0,
-          gold_9999_bid: 0,
-          gold_9999_ask: 0,
-          gold_965_bid: 0,
-          gold_965_ask: 0,
-          gold_association_bid: 0,
-          gold_association_ask: 0,
-        });
+        // Fetch user balance
+        const balanceResponse = await fetch('/api/user/balance');
+        const balanceData = await balanceResponse.json();
+        setBalance(Number(balanceData.balance));
+
+        // Fetch gold prices
+        const pricesResponse = await fetch('/api/gold');
+        const pricesData = await pricesResponse.json();
+        setPrices(pricesData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchMarkupSettings();
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    async function fetchGoldPrices() {
-      setUpdating(true);
-      try {
-        const response = await fetch('/api/gold');
-        if (!response.ok) {
-          throw new Error('Failed to fetch gold prices');
-        }
-        const data = await response.json();
-        
-        const filteredPrices = data
-          .filter((price: GoldPrice) => ['GoldSpot', 'Silver', 'THB', 'สมาคมฯ', '96.5%', '99.99%'].includes(price.name))
-          .map((price: GoldPrice) => {
-            let bidMarkup = 0;
-            let askMarkup = 0;
-            
-            switch(price.name) {
-              case 'GoldSpot':
-                bidMarkup = markupSettings.gold_spot_bid;
-                askMarkup = markupSettings.gold_spot_ask;
-                break;
-              case '99.99%':
-                bidMarkup = markupSettings.gold_9999_bid;
-                askMarkup = markupSettings.gold_9999_ask;
-                break;
-              case '96.5%':
-                bidMarkup = markupSettings.gold_965_bid;
-                askMarkup = markupSettings.gold_965_ask;
-                break;
-              case 'สมาคมฯ':
-                bidMarkup = markupSettings.gold_association_bid;
-                askMarkup = markupSettings.gold_association_ask;
-                break;
-            }
-            
-            const numericBid = typeof price.bid === 'string' ? parseFloat(price.bid) : price.bid;
-            const numericAsk = typeof price.ask === 'string' ? parseFloat(price.ask) : price.ask;
-            
-            return {
-              ...price,
-              bid: typeof numericBid === 'number' ? 
-                numericBid * (1 + bidMarkup / 100) : numericBid,
-              ask: typeof numericAsk === 'number' ? 
-                numericAsk * (1 + askMarkup / 100) : numericAsk,
-            };
-          });
-
-        setPrices(filteredPrices);
-        setLastUpdate(new Date());
-        setError(null);
-      } catch (err) {
-        setError('Failed to fetch gold prices');
-        console.error('Error fetching gold prices:', err);
-      } finally {
-        setUpdating(false);
-      }
-    }
-
-    if (!loading) {
-      fetchGoldPrices();
-      const interval = setInterval(fetchGoldPrices, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [markupSettings, loading]);
-
   const handleBuyClick = (price: GoldPrice) => {
-    setSelectedGold(price);
-    setBuyDialogOpen(true);
+    setSelectedPrice(price);
+    setMoneyAmount('');
+    setIsBuyDialogOpen(true);
   };
 
   const handleSellClick = (price: GoldPrice) => {
-    setSelectedGold(price);
-    setSellDialogOpen(true);
+    setSelectedPrice(price);
+    setMoneyAmount('');
+    setIsSellDialogOpen(true);
   };
 
   const handleBuySubmit = async () => {
-    if (!selectedGold || !amount) return;
+    if (!selectedPrice || !moneyAmount) return;
 
-    setProcessing(true);
+    const moneyNum = parseFloat(moneyAmount);
+    
+    if (moneyNum > balance) {
+      toast.error('จำนวนเงินเกินยอดคงเหลือในบัญชี');
+      return;
+    }
+
     try {
+      const pricePerUnit = typeof selectedPrice.ask === 'string' ? 
+        parseFloat(selectedPrice.ask) : selectedPrice.ask;
+      
+      const units = moneyNum / pricePerUnit;
+      
+      const goldType = selectedPrice.name === 'GoldSpot' ? 'GoldSpot' :
+                      selectedPrice.name === '99.99%' ? 'ทอง 99.99%' :
+                      selectedPrice.name === '96.5%' ? 'ทอง 96.5%' :
+                      'ทองสมาคม';
+
       const response = await fetch('/api/transactions/buy', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          goldType: selectedGold.name === 'สมาคมฯ' ? 'ทองสมาคม' : 
-                   selectedGold.name === '99.99%' ? 'ทอง 99.99%' : 
-                   selectedGold.name === '96.5%' ? 'ทอง 96.5%' : selectedGold.name,
-          amount: parseFloat(amount),
-          pricePerUnit: selectedGold.ask,
-          totalPrice: parseFloat(amount) * Number(selectedGold.ask),
-        }),
+          goldType,
+          amount: units,
+          pricePerUnit,
+          totalPrice: moneyNum
+        })
       });
 
       if (!response.ok) {
         throw new Error('Failed to process purchase');
       }
 
-      toast.success('ซื้อทองคำเรียบร้อยแล้ว');
-      setBuyDialogOpen(false);
-      setAmount('');
+      setBalance(prev => prev - moneyNum);
+      
+      // Set transaction summary and show dialog
+      setTransactionSummary({
+        goldType,
+        units,
+        price: pricePerUnit,
+        total: moneyNum
+      });
+      
+      setIsBuyDialogOpen(false);
+      setShowSummaryDialog(true);
+      toast.success('ซื้อทองสำเร็จ');
     } catch (error) {
-      toast.error('เกิดข้อผิดพลาดในการซื้อทองคำ');
-    } finally {
-      setProcessing(false);
+      toast.error('เกิดข้อผิดพลาดในการซื้อทอง');
     }
   };
 
   const handleSellSubmit = async () => {
-    if (!selectedGold || !amount) return;
+    if (!selectedPrice || !moneyAmount) return;
 
-    setProcessing(true);
     try {
+      const moneyNum = parseFloat(moneyAmount);
+      const pricePerUnit = typeof selectedPrice.bid === 'string' ? 
+        parseFloat(selectedPrice.bid) : selectedPrice.bid;
+      const units = moneyNum / pricePerUnit;
+
       const response = await fetch('/api/transactions/sell', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          goldType: selectedGold.name === 'สมาคมฯ' ? 'ทองสมาคม' : 
-                   selectedGold.name === '99.99%' ? 'ทอง 99.99%' : 
-                   selectedGold.name === '96.5%' ? 'ทอง 96.5%' : selectedGold.name,
-          amount: parseFloat(amount),
-          pricePerUnit: selectedGold.bid,
-          totalPrice: parseFloat(amount) * Number(selectedGold.bid),
-        }),
+          goldType: selectedPrice.name === 'GoldSpot' ? 'GoldSpot' :
+                   selectedPrice.name === '99.99%' ? 'ทอง 99.99%' :
+                   selectedPrice.name === '96.5%' ? 'ทอง 96.5%' :
+                   'ทองสมาคม',
+          amount: units,
+          pricePerUnit,
+          totalPrice: moneyNum
+        })
       });
 
       if (!response.ok) {
         throw new Error('Failed to process sale');
       }
 
-      toast.success('ขายทองคำเรียบร้อยแล้ว');
-      setSellDialogOpen(false);
-      setAmount('');
+      toast.success('ขายทองสำเร็จ');
+      setIsSellDialogOpen(false);
     } catch (error) {
-      toast.error('เกิดข้อผิดพลาดในการขายทองคำ');
-    } finally {
-      setProcessing(false);
+      toast.error('เกิดข้อผิดพลาดในการขายทอง');
     }
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center flex items-center justify-center space-x-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading gold prices...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center text-red-500">{error}</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center px-2">
-        <div className="text-sm text-gray-500">
-          Last updated: {lastUpdate.toLocaleTimeString()}
-        </div>
-        {updating && (
-          <div className="flex items-center text-sm text-orange-500">
-            <Loader2 className="h-3 w-3 animate-spin mr-2" />
-            Updating...
+      {/* Balance Display */}
+      <Card className="bg-gradient-to-r from-orange-500 to-orange-600">
+        <CardContent className="p-6">
+          <div className="text-white">
+            <p className="text-sm opacity-80">ยอดเงินคงเหลือ</p>
+            <p className="text-3xl font-bold">฿{balance.toLocaleString()}</p>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
+      {/* Gold Price Cards */}
       {prices.map((price, index) => (
         <Card key={index} className="bg-white overflow-hidden">
           <CardContent className="p-6">
@@ -291,16 +195,32 @@ export function GoldPrices() {
                   )}
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">
-                  ราคารับซื้อ<br />
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => handleBuyClick(price)}
+                  className="bg-green-500 hover:bg-green-600 text-white h-8 w-16"
+                  size="sm"
+                >
+                  ซื้อ
+                </Button>
+                <Button
+                  onClick={() => handleSellClick(price)}
+                  className="bg-red-500 hover:bg-red-600 text-white h-8 w-16"
+                  size="sm"
+                >
+                  ขาย
+                </Button>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">ราคารับซื้อ</p>
+                <p className="text-md font-semibold text-gray-900">
                   {price.name === "GoldSpot" ? 
                     `$${Number(price.bid).toLocaleString()}` : 
                     `${Number(price.bid).toLocaleString()} บาท`}
                 </p>
               </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">ราคาขายออก</p>
                 <p className="text-md font-semibold text-gray-900">
@@ -316,135 +236,133 @@ export function GoldPrices() {
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex gap-2">
-              <Button
-                onClick={() => handleBuyClick(price)}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm py-1"
-                size="sm"
-              >
-                ซื้อ
-              </Button>
-              <Button
-                onClick={() => handleSellClick(price)}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-1"
-                size="sm"
-              >
-                ขาย
-              </Button>
-            </div>
           </CardContent>
         </Card>
       ))}
 
       {/* Buy Dialog */}
-      <Dialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen}>
+      <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>ซื้อทองคำ</DialogTitle>
+            <DialogTitle>ซื้อทอง</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>ประเภททองคำ</Label>
-              <p className="font-medium">{selectedGold?.name}</p>
-            </div>
-            <div className="space-y-2">
-              <Label>ราคาต่อหน่วย</Label>
-              <p className="font-medium">฿{Number(selectedGold?.ask).toLocaleString()}</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">จำนวน (หน่วย)</Label>
+              <Label>จำนวนเงิน</Label>
               <Input
-                id="amount"
                 type="number"
-                step="0.0001"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={moneyAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || Number(value) <= balance) {
+                    setMoneyAmount(value);
+                  }
+                }}
+                placeholder="ระบุจำนวนเงินที่ต้องการซื้อ"
               />
             </div>
-            {amount && (
+            {moneyAmount && selectedPrice && (
               <div className="space-y-2">
-                <Label>ยอดรวม</Label>
-                <p className="text-xl font-bold text-green-600">
-                  ฿{(parseFloat(amount) * Number(selectedGold?.ask)).toLocaleString()}
+                <Label>จำนวนทอง</Label>
+                <p className="text-lg font-semibold">
+                  {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} หน่วย
                 </p>
               </div>
             )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBuyDialogOpen(false)}>
-              ยกเลิก
-            </Button>
             <Button
               onClick={handleBuySubmit}
-              className="bg-green-500 hover:bg-green-600 text-white"
-              disabled={!amount || processing}
+              className="w-full bg-green-500 hover:bg-green-600 text-white"
+              disabled={!moneyAmount || Number(moneyAmount) <= 0 || Number(moneyAmount) > balance}
             >
-              {processing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  กำลังทำรายการ...
-                </>
-              ) : (
-                'ยืนยันการซื้อ'
-              )}
+              ยืนยันการซื้อ
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Sell Dialog */}
-      <Dialog open={sellDialogOpen} onOpenChange={setSellDialogOpen}>
+      <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>ขายทองคำ</DialogTitle>
+            <DialogTitle>ขายทอง</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>ประเภททองคำ</Label>
-              <p className="font-medium">{selectedGold?.name}</p>
-            </div>
-            <div className="space-y-2">
-              <Label>ราคารับซื้อต่อหน่วย</Label>
-              <p className="font-medium">฿{Number(selectedGold?.bid).toLocaleString()}</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">จำนวน (หน่วย)</Label>
+              <Label>จำนวนเงิน</Label>
               <Input
-                id="amount"
                 type="number"
-                step="0.0001"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={moneyAmount}
+                onChange={(e) => setMoneyAmount(e.target.value)}
+                placeholder="ระบุจำนวนเงินที่ต้องการขาย"
               />
             </div>
-            {amount && (
+            {moneyAmount && selectedPrice && (
               <div className="space-y-2">
-                <Label>ยอดรวม</Label>
-                <p className="text-xl font-bold text-red-600">
-                  ฿{(parseFloat(amount) * Number(selectedGold?.bid)).toLocaleString()}
+                <Label>จำนวนทอง</Label>
+                <p className="text-lg font-semibold">
+                  {(Number(moneyAmount) / Number(selectedPrice.bid)).toFixed(4)} หน่วย
                 </p>
               </div>
             )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSellDialogOpen(false)}>
-              ยกเลิก
-            </Button>
             <Button
               onClick={handleSellSubmit}
-              className="bg-red-500 hover:bg-red-600 text-white"
-              disabled={!amount || processing}
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
             >
-              {processing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  กำลังทำรายการ...
-                </>
-              ) : (
-                'ยืนยันการขาย'
-              )}
+              ยืนยันการขาย
             </Button>
-          </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Summary Dialog */}
+      <Dialog 
+        open={showSummaryDialog} 
+        onOpenChange={setShowSummaryDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>สรุปรายการซื้อทอง</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {transactionSummary && (
+              <>
+                <div className="bg-green-50 p-4 rounded-lg text-center mb-4">
+                  <div className="text-green-600 text-xl mb-2">✓ ทำรายการสำเร็จ</div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">ประเภททอง</span>
+                    <span className="font-medium">{transactionSummary.goldType}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">จำนวนทอง</span>
+                    <span className="font-medium">{transactionSummary.units.toFixed(4)} หน่วย</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">ราคาต่อหน่วย</span>
+                    <span className="font-medium">฿{transactionSummary.price.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between text-lg font-semibold">
+                      <span>ยอดรวมทั้งสิ้น</span>
+                      <span className="text-green-600">฿{transactionSummary.total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => setShowSummaryDialog(false)}
+                  className="w-full mt-4"
+                >
+                  ปิด
+                </Button>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
