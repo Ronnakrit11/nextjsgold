@@ -18,18 +18,17 @@ export default function DepositPage() {
     e.preventDefault();
     
     if (!selectedFile || !amount) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     try {
       setIsVerifying(true);
 
-      // Create form data for verification
       const formData = new FormData();
       formData.append('slip', selectedFile);
       formData.append('amount', amount);
 
-      // Call our API endpoint
       const response = await fetch('/api/verify-slip', {
         method: 'POST',
         body: formData,
@@ -41,9 +40,8 @@ export default function DepositPage() {
         throw new Error(data.error || 'Failed to verify slip');
       }
 
-      // Check verification result
       if (data.verified) {
-        toast.success('Deposit verified successfully!');
+        toast.success('Transfer slip verified successfully!');
         // Reset form
         setAmount('');
         setSelectedMethod(null);
@@ -53,7 +51,7 @@ export default function DepositPage() {
       }
     } catch (error) {
       console.error('Error processing deposit:', error);
-      toast.error('Failed to verify transfer slip. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to verify transfer slip');
     } finally {
       setIsVerifying(false);
     }
@@ -92,7 +90,6 @@ export default function DepositPage() {
       </h1>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Deposit Form */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -185,7 +182,6 @@ export default function DepositPage() {
           </CardContent>
         </Card>
 
-        {/* Recent Deposits */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Deposits</CardTitle>

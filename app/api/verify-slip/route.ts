@@ -22,8 +22,9 @@ export async function POST(request: Request) {
     }
 
     // Convert file to base64
-    const buffer = await file.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const base64 = buffer.toString('base64');
 
     // Create payload for the API
     const payload = {
@@ -40,22 +41,31 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      cache: 'no-store',
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: data.message || 'Verification failed' },
+        { error: errorData.message || 'Verification failed' },
         { status: response.status }
       );
     }
 
-    return NextResponse.json(data);
+    const data = await response.json();
+
+    // Process the verification result
+    const result = {
+      verified: data.status === 'success',
+      message: data.message || 'Verification completed',
+      data: data
+    };
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error verifying slip:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
