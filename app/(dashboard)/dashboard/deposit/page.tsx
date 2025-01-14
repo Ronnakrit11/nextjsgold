@@ -18,7 +18,7 @@ export default function DepositPage() {
     e.preventDefault();
     
     if (!selectedFile || !amount) {
-      toast.error('Please fill in all required fields');
+      toast.error('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
@@ -37,21 +37,25 @@ export default function DepositPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to verify slip');
+        if (data.message === 'slip_already_used') {
+          toast.error('สลิปถูกใช้ไปแล้ว');
+          return;
+        }
+        throw new Error(data.message || 'Failed to verify slip');
       }
 
-      if (data.verified) {
-        toast.success('Transfer slip verified successfully!');
+      if (data.status === 200) {
+        toast.success('ยืนยันสลิปสำเร็จ');
         // Reset form
         setAmount('');
         setSelectedMethod(null);
         setSelectedFile(null);
       } else {
-        toast.error(data.message || 'Invalid transfer slip');
+        toast.error(data.message || 'สลิปไม่ถูกต้อง');
       }
     } catch (error) {
       console.error('Error processing deposit:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to verify transfer slip');
+      toast.error(error instanceof Error ? error.message : 'ไม่สามารถตรวจสอบสลิปได้');
     } finally {
       setIsVerifying(false);
     }
@@ -62,12 +66,12 @@ export default function DepositPage() {
       const file = e.target.files[0];
       // Check file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size must be less than 10MB');
+        toast.error('ขนาดไฟล์ต้องไม่เกิน 10MB');
         return;
       }
       // Check file type
       if (!file.type.startsWith('image/')) {
-        toast.error('Please upload an image file');
+        toast.error('กรุณาอัพโหลดไฟล์รูปภาพเท่านั้น');
         return;
       }
       setSelectedFile(file);
