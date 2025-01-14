@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart2, Wallet } from 'lucide-react';
+import { BarChart2, Wallet, PieChart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface GoldAsset {
@@ -68,6 +68,9 @@ export default function AssetPage() {
     }, 0);
   };
 
+  const totalAssetValue = calculateTotalValue();
+  const totalAccountValue = totalAssetValue + balance;
+
   if (loading) {
     return (
       <section className="flex-1 p-4 lg:p-8">
@@ -82,7 +85,34 @@ export default function AssetPage() {
         Asset Overview
       </h1>
       
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Account Value Card */}
+        <Card className="md:col-span-3">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <PieChart className="h-6 w-6 text-orange-500" />
+              <span>Account Value</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-center md:text-left">
+                <p className="text-4xl font-bold text-orange-500">
+                  ฿{totalAccountValue.toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Total Account Value
+                </p>
+              </div>
+              <div className="flex gap-8">
+               
+              
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Balance Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -102,7 +132,8 @@ export default function AssetPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Asset Distribution Card */}
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart2 className="h-6 w-6 text-orange-500" />
@@ -112,7 +143,7 @@ export default function AssetPage() {
           <CardContent>
             <div className="mt-2">
               <p className="text-3xl font-bold text-orange-500">
-                ฿{calculateTotalValue().toLocaleString()}
+                ฿{totalAssetValue.toLocaleString()}
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 Total Asset Value (at current buy-back prices)
@@ -122,6 +153,7 @@ export default function AssetPage() {
         </Card>
       </div>
 
+      {/* Asset Holdings Card */}
       <Card className="mt-8">
         <CardHeader>
           <CardTitle>Asset Holdings</CardTitle>
