@@ -15,17 +15,24 @@ export async function GET() {
       );
     }
 
-    const transactions = await db
-      .select()
+    const assets = await db
+      .select({
+        id: goldAssets.id,
+        goldType: goldAssets.goldType,
+        amount: goldAssets.amount,
+        purchasePrice: goldAssets.purchasePrice,
+        createdAt: goldAssets.createdAt,
+        updatedAt: goldAssets.updatedAt
+      })
       .from(goldAssets)
       .where(eq(goldAssets.userId, user.id))
       .orderBy(goldAssets.createdAt);
 
-    return NextResponse.json(transactions);
+    return NextResponse.json(assets);
   } catch (error) {
-    console.error('Error fetching transaction history:', error);
+    console.error('Error fetching gold assets:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch transaction history' },
+      { error: 'Failed to fetch gold assets' },
       { status: 500 }
     );
   }
