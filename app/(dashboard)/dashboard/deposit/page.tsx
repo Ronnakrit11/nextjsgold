@@ -5,14 +5,42 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Wallet, CreditCard, Upload, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useUser } from '@/lib/auth';
+
+interface VerifiedSlip {
+  id: number;
+  amount: string;
+  verifiedAt: string;
+  status: 'completed' | 'pending';
+}
 
 export default function DepositPage() {
+  const { user } = useUser();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [recentDeposits, setRecentDeposits] = useState<VerifiedSlip[]>([]);
+
+  useEffect(() => {
+    async function fetchRecentDeposits() {
+      try {
+        const response = await fetch('/api/deposits/recent');
+        if (response.ok) {
+          const data = await response.json();
+          setRecentDeposits(data);
+        }
+      } catch (error) {
+        console.error('Error fetching recent deposits:', error);
+      }
+    }
+
+    if (user) {
+      fetchRecentDeposits();
+    }
+  }, [user]);
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +78,12 @@ export default function DepositPage() {
         setAmount('');
         setSelectedMethod(null);
         setSelectedFile(null);
+        // Refresh recent deposits
+        const recentResponse = await fetch('/api/deposits/recent');
+        if (recentResponse.ok) {
+          const recentData = await recentResponse.json();
+          setRecentDeposits(recentData);
+        }
       } else {
         toast.error(data.message || 'สลิปไม่ถูกต้อง');
       }
@@ -87,6 +121,14 @@ export default function DepositPage() {
     }
   ];
 
+  function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  }
+
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
@@ -107,6 +149,7 @@ export default function DepositPage() {
                 <Label htmlFor="amount">Amount (THB)</Label>
                 <Input
                   id="amount"
+                  name="amount"
                   type="number"
                   placeholder="Enter amount"
                   value={amount}
@@ -192,30 +235,30 @@ export default function DepositPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { id: 1, date: '2024-03-20', amount: '10,000', status: 'completed' },
-                { id: 2, date: '2024-03-18', amount: '5,000', status: 'pending' },
-                { id: 3, date: '2024-03-15', amount: '15,000', status: 'completed' },
-              ].map((deposit) => (
-                <div
-                  key={deposit.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">฿{deposit.amount}</p>
-                    <p className="text-sm text-gray-500">{deposit.date}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      deposit.status === 'completed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}
+              {recentDeposits.length > 0 ? (
+                recentDeposits.map((deposit) => (
+                  <div
+                    key={deposit.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
                   >
-                    {deposit.status}
-                  </span>
-                </div>
-              ))}
+                    <div>
+                      <p className="font-medium">฿{Number(deposit.amount).toLocaleString()}</p>
+                      <p className="text-sm text-gray-500">{formatDate(deposit.verifiedAt)}</p>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        deposit.status === 'completed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
+                      {deposit.status}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500">No recent deposits</p>
+              )}
             </div>
           </CardContent>
         </Card>
