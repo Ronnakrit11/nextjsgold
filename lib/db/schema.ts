@@ -187,3 +187,14 @@ export const socialSettingsRelations = relations(socialSettings, ({ one }) => ({
 // Add these types to your existing type exports
 export type SocialSetting = typeof socialSettings.$inferSelect;
 export type NewSocialSetting = typeof socialSettings.$inferInsert;
+
+export const verifiedSlips = pgTable('verified_slips', {
+  id: serial('id').primaryKey(),
+  transRef: text('trans_ref').notNull().unique(),
+  amount: decimal('amount').notNull(),
+  verifiedAt: timestamp('verified_at').notNull().defaultNow(),
+  userId: integer('user_id').references(() => users.id),
+});
+
+export type VerifiedSlip = typeof verifiedSlips.$inferSelect;
+export type NewVerifiedSlip = typeof verifiedSlips.$inferInsert;

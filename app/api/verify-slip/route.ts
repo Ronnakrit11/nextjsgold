@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/db/drizzle';
+import { verifiedSlips } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
 
 const API_URL = 'https://developer.easyslip.com/api/v1/verify';
 const API_KEY = process.env.EASYSLIP_API_KEY;
@@ -105,8 +109,27 @@ function validateReceiver(data: EasySlipResponse): boolean {
   return true;
 }
 
+async function checkSlipAlreadyUsed(transRef: string): Promise<boolean> {
+  const existingSlip = await db
+    .select()
+    .from(verifiedSlips)
+    .where(eq(verifiedSlips.transRef, transRef))
+    .limit(1);
+
+  return existingSlip.length > 0;
+}
+
+async function recordVerifiedSlip(transRef: string, amount: number, userId: number | null) {
+  await db.insert(verifiedSlips).values({
+    transRef: transRef,
+    amount: amount.toString(), // Convert number to string for decimal type
+    userId: userId,
+  });
+}
+
 export async function POST(request: Request) {
   try {
+    const user = await getUser();
     const formData = await request.formData();
     const file = formData.get('slip') as File;
 
@@ -166,6 +189,28 @@ export async function POST(request: Request) {
           details: 'Transfer must be to นาย รนกฤต เ account only'
         },
         { status: 400 }
+      );
+    }
+
+    // Check if slip has already been used
+    if (data.data?.transRef) {
+      const isUsed = await checkSlipAlreadyUsed(data.data.transRef);
+      if (isUsed) {
+        return NextResponse.json(
+          {
+            status: 400,
+            message: 'slip_already_used',
+            details: 'This transfer slip has already been used'
+          },
+          { status: 400 }
+        );
+      }
+
+      // Record the verified slip
+      await recordVerifiedSlip(
+        data.data.transRef,
+        data.data.amount.amount,
+        user?.id || null
       );
     }
 
