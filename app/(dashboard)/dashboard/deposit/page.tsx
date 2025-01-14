@@ -4,17 +4,76 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Wallet, CreditCard, QrCode } from 'lucide-react';
+import { Wallet, CreditCard, Upload, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DepositPage() {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleDeposit = (e: React.FormEvent) => {
+  const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle deposit logic here
-    console.log('Deposit:', { amount, method: selectedMethod });
+    
+    if (!selectedFile || !amount) {
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+
+      // Create form data for verification
+      const formData = new FormData();
+      formData.append('slip', selectedFile);
+      formData.append('amount', amount);
+
+      // Call our API endpoint
+      const response = await fetch('/api/verify-slip', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to verify slip');
+      }
+
+      // Check verification result
+      if (data.verified) {
+        toast.success('Deposit verified successfully!');
+        // Reset form
+        setAmount('');
+        setSelectedMethod(null);
+        setSelectedFile(null);
+      } else {
+        toast.error(data.message || 'Invalid transfer slip');
+      }
+    } catch (error) {
+      console.error('Error processing deposit:', error);
+      toast.error('Failed to verify transfer slip. Please try again.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB');
+        return;
+      }
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+      setSelectedFile(file);
+    }
   };
 
   const paymentMethods = [
@@ -22,13 +81,7 @@ export default function DepositPage() {
       id: 'bank',
       name: 'Bank Transfer',
       icon: CreditCard,
-      accountInfo: 'Bank: XXX-X-XXXXX-X'
-    },
-    {
-      id: 'promptpay',
-      name: 'PromptPay',
-      icon: QrCode,
-      accountInfo: 'PromptPay: XXX-XXX-XXXX'
+      accountInfo: 'Bank: 131-8-09271-7\nนายรนกฤต เชียรวิชัย'
     }
   ];
 
@@ -80,19 +133,53 @@ export default function DepositPage() {
                       <method.icon className="h-5 w-5" />
                       <div className="flex flex-col items-start">
                         <span>{method.name}</span>
-                        <span className="text-sm opacity-75">{method.accountInfo}</span>
+                        <span className="text-sm opacity-75 whitespace-pre-line">{method.accountInfo}</span>
                       </div>
                     </Button>
                   ))}
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="slip">Upload Transfer Slip</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="slip"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    required
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-24 flex flex-col items-center justify-center border-dashed"
+                    onClick={() => document.getElementById('slip')?.click()}
+                  >
+                    <Upload className="h-6 w-6 mb-2" />
+                    {selectedFile ? (
+                      <span className="text-sm">{selectedFile.name}</span>
+                    ) : (
+                      <span className="text-sm">Click to upload slip</span>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               <Button 
                 type="submit" 
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={!amount || !selectedMethod}
+                disabled={!amount || !selectedMethod || !selectedFile || isVerifying}
               >
-                Proceed with Deposit
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Proceed with Deposit'
+                )}
               </Button>
             </form>
           </CardContent>
