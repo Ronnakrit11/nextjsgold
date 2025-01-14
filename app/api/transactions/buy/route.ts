@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { userBalances, goldAssets } from '@/lib/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { userBalances, goldAssets, transactions } from '@/lib/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 
 export async function POST(request: Request) {
@@ -29,36 +29,23 @@ export async function POST(request: Request) {
         })
         .where(eq(userBalances.userId, user.id));
 
-      // Add to user's gold assets
-      const existingAsset = await tx
-        .select()
-        .from(goldAssets)
-        .where(
-          and(
-            eq(goldAssets.userId, user.id),
-            eq(goldAssets.goldType, goldType)
-          )
-        )
-        .limit(1);
+      // Always create a new gold asset record for each purchase
+      await tx.insert(goldAssets).values({
+        userId: user.id,
+        goldType,
+        amount,
+        purchasePrice: pricePerUnit,
+      });
 
-      if (existingAsset.length > 0) {
-        // Update existing asset
-        await tx
-          .update(goldAssets)
-          .set({
-            amount: sql`${goldAssets.amount} + ${amount}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(goldAssets.id, existingAsset[0].id));
-      } else {
-        // Create new asset record
-        await tx.insert(goldAssets).values({
-          userId: user.id,
-          goldType,
-          amount,
-          purchasePrice: pricePerUnit,
-        });
-      }
+      // Record the transaction
+      await tx.insert(transactions).values({
+        userId: user.id,
+        goldType,
+        amount,
+        pricePerUnit,
+        totalPrice,
+        type: 'buy',
+      });
 
       // Return updated balances
       const [newBalance] = await tx
@@ -70,12 +57,8 @@ export async function POST(request: Request) {
       const [newAsset] = await tx
         .select()
         .from(goldAssets)
-        .where(
-          and(
-            eq(goldAssets.userId, user.id),
-            eq(goldAssets.goldType, goldType)
-          )
-        )
+        .where(eq(goldAssets.userId, user.id))
+        .orderBy(sql`${goldAssets.createdAt} DESC`)
         .limit(1);
 
       return {

@@ -9,9 +9,10 @@ interface Transaction {
   id: number;
   goldType: string;
   amount: string;
-  purchasePrice: string;
+  pricePerUnit: string;
+  totalPrice: string;
+  type: 'buy' | 'sell';
   createdAt: string;
-  updatedAt: string;
   user?: {
     id: number;
     name: string | null;
@@ -66,12 +67,20 @@ export default function TransactionPage() {
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="p-2 rounded-full bg-green-100 text-green-600">
-                      <ArrowDownCircle className="h-6 w-6" />
+                    <div className={`p-2 rounded-full ${
+                      transaction.type === 'buy' 
+                        ? 'bg-green-100 text-green-600' 
+                        : 'bg-red-100 text-red-600'
+                    }`}>
+                      {transaction.type === 'buy' ? (
+                        <ArrowDownCircle className="h-6 w-6" />
+                      ) : (
+                        <ArrowUpCircle className="h-6 w-6" />
+                      )}
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">
-                        ซื้อ {transaction.goldType}
+                        {transaction.type === 'buy' ? 'ซื้อ' : 'ขาย'} {transaction.goldType}
                       </p>
                       {isAdmin && transaction.user && (
                         <p className="text-sm text-orange-600">
@@ -84,11 +93,13 @@ export default function TransactionPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-red-600">
-                      -฿{(Number(transaction.amount) * Number(transaction.purchasePrice)).toLocaleString()}
+                    <p className={`font-medium ${
+                      transaction.type === 'buy' ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      {transaction.type === 'buy' ? '-' : '+'}฿{Number(transaction.totalPrice).toLocaleString()}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {Number(transaction.amount).toFixed(4)} บาท @ ฿{Number(transaction.purchasePrice).toLocaleString()}
+                      {Number(transaction.amount).toFixed(4)} บาท @ ฿{Number(transaction.pricePerUnit).toLocaleString()}
                     </p>
                   </div>
                 </div>

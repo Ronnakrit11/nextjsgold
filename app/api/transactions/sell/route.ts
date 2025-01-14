@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { userBalances, goldAssets } from '@/lib/db/schema';
+import { userBalances, goldAssets, transactions } from '@/lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 
@@ -53,6 +53,16 @@ export async function POST(request: Request) {
           updatedAt: new Date(),
         })
         .where(eq(userBalances.userId, user.id));
+
+      // Record the transaction
+      await tx.insert(transactions).values({
+        userId: user.id,
+        goldType,
+        amount,
+        pricePerUnit,
+        totalPrice,
+        type: 'sell',
+      });
 
       // Return updated balances
       const [newBalance] = await tx

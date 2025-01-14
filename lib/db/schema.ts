@@ -236,3 +236,28 @@ export const goldAssetsRelations = relations(goldAssets, ({ one }) => ({
 // Add to your existing types
 export type GoldAsset = typeof goldAssets.$inferSelect;
 export type NewGoldAsset = typeof goldAssets.$inferInsert;
+
+export const transactions = pgTable('transactions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  goldType: varchar('gold_type', { length: 50 }).notNull(),
+  amount: decimal('amount').notNull(),
+  pricePerUnit: decimal('price_per_unit').notNull(),
+  totalPrice: decimal('total_price').notNull(),
+  type: varchar('type', { length: 10 }).notNull(), // 'buy' or 'sell'
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// Add to your existing relations
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  user: one(users, {
+    fields: [transactions.userId],
+    references: [users.id],
+  }),
+}));
+
+// Add to your existing types
+export type Transaction = typeof transactions.$inferSelect;
+export type NewTransaction = typeof transactions.$inferInsert;

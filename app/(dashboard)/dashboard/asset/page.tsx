@@ -17,6 +17,16 @@ interface GoldPrice {
   diff: string | number;
 }
 
+interface Transaction {
+  id: number;
+  goldType: string;
+  amount: string;
+  pricePerUnit: string;
+  totalPrice: string;
+  type: 'buy' | 'sell';
+  createdAt: string;
+}
+
 export default function AssetPage() {
   const [balance, setBalance] = useState(0);
   const [assets, setAssets] = useState<GoldAsset[]>([]);
@@ -33,24 +43,34 @@ export default function AssetPage() {
 
         // Fetch gold assets
         const assetsResponse = await fetch('/api/transactions/history');
-        const assetsData = await assetsResponse.json();
+        const assetsData = (await assetsResponse.json()) as Transaction[];
         
-        // Combine same gold types
-        const combinedAssets = assetsData.reduce((acc: GoldAsset[], curr: GoldAsset) => {
-          const existingAsset = acc.find(asset => asset.goldType === curr.goldType);
-          if (existingAsset) {
-            // Add amounts together
-            existingAsset.amount = (Number(existingAsset.amount) + Number(curr.amount)).toString();
-            // Calculate weighted average purchase price
-            const totalValue = Number(existingAsset.amount) * Number(existingAsset.purchasePrice) + 
-                             Number(curr.amount) * Number(curr.purchasePrice);
-            const totalUnits = Number(existingAsset.amount) + Number(curr.amount);
-            existingAsset.purchasePrice = (totalValue / totalUnits).toString();
-          } else {
-            acc.push({ ...curr });
+        // Process transactions to calculate current holdings and cost basis
+        const holdings = assetsData.reduce((acc: Record<string, { amount: number, totalCost: number }>, curr) => {
+          const goldType = curr.goldType;
+          if (!acc[goldType]) {
+            acc[goldType] = { amount: 0, totalCost: 0 };
           }
+          
+          if (curr.type === 'buy') {
+            acc[goldType].amount += Number(curr.amount);
+            acc[goldType].totalCost += Number(curr.totalPrice);
+          } else if (curr.type === 'sell') {
+            acc[goldType].amount -= Number(curr.amount);
+            // For sells, reduce cost basis proportionally
+            const costPerUnit = acc[goldType].totalCost / (acc[goldType].amount + Number(curr.amount));
+            acc[goldType].totalCost -= costPerUnit * Number(curr.amount);
+          }
+          
           return acc;
-        }, []);
+        }, {});
+
+        // Convert holdings to assets format
+        const combinedAssets = Object.entries(holdings).map(([goldType, data]) => ({
+          goldType,
+          amount: data.amount.toString(),
+          purchasePrice: (data.amount > 0 ? data.totalCost / data.amount : 0).toString()
+        })).filter(asset => Number(asset.amount) > 0);
 
         setAssets(combinedAssets);
 
@@ -124,12 +144,8 @@ export default function AssetPage() {
               </div>
               <div className="flex gap-8">
                 <div className="text-center">
-                
-                 
                 </div>
                 <div className="text-center">
-                
-                
                 </div>
               </div>
             </div>
@@ -190,7 +206,7 @@ export default function AssetPage() {
                 const currentValue = Number(asset.amount) * buybackPrice;
                 const purchaseValue = Number(asset.amount) * Number(asset.purchasePrice);
                 const profitLoss = currentValue - purchaseValue;
-                const profitLossPercentage = (profitLoss / purchaseValue) * 100;
+                const profitLossPercentage = purchaseValue > 0 ? (profitLoss / purchaseValue) * 100 : 0;
 
                 return (
                   <div 
