@@ -1,7 +1,41 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
+import { FileText, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface Transaction {
+  id: number;
+  userId: number;
+  goldType: string;
+  amount: string;
+  purchasePrice: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function TransactionPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTransactions() {
+      try {
+        const response = await fetch('/api/transactions/history');
+        if (response.ok) {
+          const data = await response.json();
+          setTransactions(data);
+        }
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTransactions();
+  }, []);
+
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
@@ -15,9 +49,44 @@ export default function TransactionPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <p className="text-gray-500">Transaction history will go here</p>
-          </div>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading transactions...</div>
+          ) : transactions.length > 0 ? (
+            <div className="space-y-4">
+              {transactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-2 rounded-full bg-green-100 text-green-600">
+                      <ArrowDownCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        ซื้อ {transaction.goldType}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(transaction.createdAt).toLocaleString('th-TH')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-red-600">
+                      -฿{(Number(transaction.amount) * Number(transaction.purchasePrice)).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {Number(transaction.amount).toFixed(4)} หน่วย @ ฿{Number(transaction.purchasePrice).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              ยังไม่มีประวัติการทำรายการ
+            </div>
+          )}
         </CardContent>
       </Card>
     </section>

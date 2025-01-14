@@ -212,3 +212,27 @@ export enum ActivityType {
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
 }
+
+export const goldAssets = pgTable('gold_assets', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  goldType: varchar('gold_type', { length: 50 }).notNull(),
+  amount: decimal('amount').notNull().default('0'),
+  purchasePrice: decimal('purchase_price').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Add to your existing relations
+export const goldAssetsRelations = relations(goldAssets, ({ one }) => ({
+  user: one(users, {
+    fields: [goldAssets.userId],
+    references: [users.id],
+  }),
+}));
+
+// Add to your existing types
+export type GoldAsset = typeof goldAssets.$inferSelect;
+export type NewGoldAsset = typeof goldAssets.$inferInsert;

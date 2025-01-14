@@ -22,6 +22,13 @@
       "when": 1736835855803,
       "tag": "0002_wakeful_black_bird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1736842587546,
+      "tag": "0003_shallow_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }

@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface GoldPrice {
   name: string;
@@ -23,25 +34,200 @@ interface MarkupSettings {
   gold_association_ask: number;
 }
 
-const defaultMarkupSettings: MarkupSettings = {
-  gold_spot_bid: 0,
-  gold_spot_ask: 0,
-  gold_9999_bid: 0,
-  gold_9999_ask: 0,
-  gold_965_bid: 0,
-  gold_965_ask: 0,
-  gold_association_bid: 0,
-  gold_association_ask: 0,
-};
+interface TransactionInfo {
+  goldType: string;
+  amount: number;
+  pricePerUnit: number;
+  totalPrice: number;
+  timestamp: string;
+}
 
-const allowedItems = [
-  'GoldSpot',
-  'Silver',
-  'THB',
-  'สมาคมฯ',
-  '96.5%',
-  '99.99%'
-];
+function TransactionSuccessDialog({
+  isOpen,
+  onClose,
+  transaction
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  transaction: TransactionInfo;
+}) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-green-600 flex items-center gap-2">
+            <CheckCircle className="h-5 w-5" />
+            ทำรายการสำเร็จ
+          </DialogTitle>
+          <DialogDescription>
+            รายละเอียดการทำรายการ
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="border rounded-lg p-4 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">ประเภททองคำ</span>
+              <span className="font-medium">{transaction.goldType}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">จำนวน</span>
+              <span className="font-medium">{transaction.amount.toFixed(4)} หน่วย</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">ราคาต่อหน่วย</span>
+              <span className="font-medium">฿{transaction.pricePerUnit.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-lg font-semibold">
+              <span className="text-gray-600">ยอดรวม</span>
+              <span className="text-orange-600">฿{transaction.totalPrice.toLocaleString()}</span>
+            </div>
+          </div>
+          <div className="text-center text-sm text-gray-500">
+            เวลาทำรายการ: {new Date(transaction.timestamp).toLocaleString('th-TH')}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={onClose} className="w-full">
+            ปิด
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BuyDialog({ 
+  isOpen, 
+  onClose, 
+  price, 
+  goldType, 
+  userBalance 
+}: { 
+  isOpen: boolean;
+  onClose: () => void;
+  price: GoldPrice;
+  goldType: string;
+  userBalance: number;
+}) {
+  const [amount, setAmount] = useState('');
+  const [error, setError] = useState('');
+  const [transaction, setTransaction] = useState<TransactionInfo | null>(null);
+  const askPrice = Number(price.ask);
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAmount(value);
+
+    const numValue = Number(value);
+    if (numValue <= 0) {
+      setError('กรุณาระบุจำนวนเงินที่ต้องการซื้อ');
+    } else if (numValue > userBalance) {
+      setError('ยอดเงินไม่เพียงพอ');
+    } else {
+      setError('');
+    }
+  };
+
+  const handleBuy = async () => {
+    if (!amount || error) return;
+
+    const numAmount = Number(amount);
+    const calculatedUnits = numAmount / askPrice;
+
+    try {
+      const response = await fetch('/api/transactions/buy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          goldType,
+          amount: calculatedUnits,
+          pricePerUnit: askPrice,
+          totalPrice: numAmount
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process purchase');
+      }
+
+      const data = await response.json();
+      
+      setTransaction({
+        goldType,
+        amount: calculatedUnits,
+        pricePerUnit: askPrice,
+        totalPrice: numAmount,
+        timestamp: new Date().toISOString()
+      });
+
+      toast.success('ซื้อทองคำเรียบร้อยแล้ว');
+    } catch (error) {
+      toast.error('เกิดข้อผิดพลาดในการทำรายการ');
+    }
+  };
+
+  return (
+    <>
+      <Dialog open={isOpen && !transaction} onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>ซื้อ {goldType}</DialogTitle>
+            <DialogDescription>
+              กรุณาระบุจำนวนเงินที่ต้องการซื้อ
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-500">ยอดเงินคงเหลือ</label>
+              <p className="text-lg font-semibold">฿{userBalance.toLocaleString()}</p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-500">จำนวนเงินที่ต้องการซื้อ</label>
+              <Input
+                type="number"
+                value={amount}
+                onChange={handleAmountChange}
+                placeholder="ระบุจำนวนเงิน"
+                className="mt-1"
+              />
+              {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+            </div>
+            {amount && !error && (
+              <div>
+                <label className="text-sm text-gray-500">จำนวนทองที่จะได้รับ</label>
+                <p className="text-lg font-semibold">
+                  {(Number(amount) / askPrice).toFixed(4)} หน่วย
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleBuy}
+              disabled={!amount || !!error}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              ยืนยันการซื้อ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {transaction && (
+        <TransactionSuccessDialog
+          isOpen={!!transaction}
+          onClose={() => {
+            setTransaction(null);
+            onClose();
+          }}
+          transaction={transaction}
+        />
+      )}
+    </>
+  );
+}
 
 export function GoldPrices() {
   const [prices, setPrices] = useState<GoldPrice[]>([]);
@@ -51,6 +237,25 @@ export function GoldPrices() {
   const [markupLoading, setMarkupLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [updating, setUpdating] = useState(false);
+  const [selectedPrice, setSelectedPrice] = useState<GoldPrice | null>(null);
+  const [buyDialogOpen, setBuyDialogOpen] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
+
+  useEffect(() => {
+    async function fetchUserBalance() {
+      try {
+        const response = await fetch('/api/user/balance');
+        if (response.ok) {
+          const data = await response.json();
+          setUserBalance(Number(data.balance));
+        }
+      } catch (error) {
+        console.error('Error fetching user balance:', error);
+      }
+    }
+
+    fetchUserBalance();
+  }, []);
 
   useEffect(() => {
     async function fetchMarkupSettings() {
@@ -133,11 +338,15 @@ export function GoldPrices() {
 
     if (!markupLoading) {
       fetchGoldPrices();
-      // Update every 10 seconds
       const interval = setInterval(fetchGoldPrices, 10000);
       return () => clearInterval(interval);
     }
   }, [markupSettings, markupLoading]);
+
+  const handleBuyClick = (price: GoldPrice) => {
+    setSelectedPrice(price);
+    setBuyDialogOpen(true);
+  };
 
   if (loading || markupLoading) {
     return (
@@ -208,7 +417,6 @@ export function GoldPrices() {
                     `$${Number(price.bid).toLocaleString()}` : 
                     `${Number(price.bid).toLocaleString()} บาท`}
                 </p>
-              
               </div>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4">
@@ -227,9 +435,52 @@ export function GoldPrices() {
                 </p>
               </div>
             </div>
+            <div className="mt-4">
+              <Button
+                onClick={() => handleBuyClick(price)}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                ซื้อ
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}
+
+      {selectedPrice && (
+        <BuyDialog
+          isOpen={buyDialogOpen}
+          onClose={() => setBuyDialogOpen(false)}
+          price={selectedPrice}
+          goldType={
+            selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" :
+            selectedPrice.name === "99.99%" ? "ทอง 99.99%" :
+            selectedPrice.name === "96.5%" ? "ทอง 96.5%" :
+            selectedPrice.name
+          }
+          userBalance={userBalance}
+        />
+      )}
     </div>
   );
 }
+
+const defaultMarkupSettings = {
+  gold_spot_bid: 0,
+  gold_spot_ask: 0,
+  gold_9999_bid: 0,
+  gold_9999_ask: 0,
+  gold_965_bid: 0,
+  gold_965_ask: 0,
+  gold_association_bid: 0,
+  gold_association_ask: 0,
+};
+
+const allowedItems = [
+  'GoldSpot',
+  'Silver',
+  'THB',
+  'สมาคมฯ',
+  '96.5%',
+  '99.99%'
+];
