@@ -250,7 +250,7 @@ export default function DepositPage() {
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
                     <div>
-                      <p className="font-medium">฿{Number(deposit.amount).toLocaleString()}</p>
+                      <p className="font-medium">{Number(deposit.amount).toLocaleString()} ฿</p>
                       <p className="text-sm text-gray-500">{formatDate(deposit.verifiedAt)}</p>
                     </div>
                     <span

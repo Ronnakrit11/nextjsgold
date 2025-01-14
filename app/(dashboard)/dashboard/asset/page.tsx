@@ -109,17 +109,17 @@ export default function AssetPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <PieChart className="h-6 w-6 text-orange-500" />
-              <span>Account Value</span>
+              <span className='text-sm '>Account Value</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-center md:text-left">
-                <p className="text-4xl font-bold text-orange-500">
-                  ฿{totalAccountValue.toLocaleString()}
+                <p className="text-xl font-bold text-orange-500">
+                 {totalAccountValue.toLocaleString()}  ฿
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Total Account Value
+                  มูลค่ารวมในพอร์ต
                 </p>
               </div>
               <div className="flex gap-8">
@@ -139,15 +139,15 @@ export default function AssetPage() {
         {/* Balance Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Wallet className="h-6 w-6 text-orange-500" />
-              <span>Your Balance</span>
+            <CardTitle className="flex items-center space-x-2 ">
+              <Wallet className=" h-6 w-6 text-orange-500" />
+              <span className='text-sm'>เงินสดในพอร์ต</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mt-2">
-              <p className="text-3xl font-bold text-orange-500">
-                ฿{balance.toLocaleString()}
+              <p className="text-xl font-bold text-orange-500">
+               {balance.toLocaleString()}  ฿
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 Total Available Balance
@@ -161,13 +161,13 @@ export default function AssetPage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart2 className="h-6 w-6 text-orange-500" />
-              <span>Asset Distribution</span>
+              <span className='text-sm '>Asset Distribution</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mt-2">
-              <p className="text-3xl font-bold text-orange-500">
-                ฿{totalAssetValue.toLocaleString()}
+              <p className="text-xl font-bold text-orange-500">
+                {totalAssetValue.toLocaleString()} ฿
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 Total Asset Value (at current buy-back prices)
