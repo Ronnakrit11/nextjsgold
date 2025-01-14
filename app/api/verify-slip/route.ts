@@ -1,22 +1,134 @@
 import { NextResponse } from 'next/server';
 
-const API_URL = 'https://suba.rdcw.co.th/v1/inquiry';
-const CLIENT_ID = process.env.RDCW_CLIENT_ID;
-const CLIENT_SECRET = process.env.RDCW_CLIENT_SECRET;
+const API_URL = 'https://developer.easyslip.com/api/v1/verify';
+const API_KEY = process.env.EASYSLIP_API_KEY;
 
-if (!CLIENT_ID || !CLIENT_SECRET) {
-  throw new Error('RDCW credentials not configured');
+// Expected receiver details
+const EXPECTED_RECEIVER = {
+  name: {
+    th: "นาย รนกฤต เ",
+    en: "MR. RONNAKRIT C"
+  },
+  account: "XXX-X-XX271-7",
+  type: "BANKAC"
+};
+
+if (!API_KEY) {
+  throw new Error('EASYSLIP_API_KEY not configured');
+}
+
+// Define response type according to EasySlip API
+type EasySlipResponse = {
+  status: number;
+  data?: {
+    payload: string;
+    transRef: string;
+    date: string;
+    countryCode: string;
+    amount: {
+      amount: number;
+      local: {
+        amount?: number;
+        currency?: string;
+      };
+    };
+    fee?: number;
+    ref1?: string;
+    ref2?: string;
+    ref3?: string;
+    sender: {
+      bank: {
+        id: string;
+        name?: string;
+        short?: string;
+      };
+      account: {
+        name: {
+          th?: string;
+          en?: string;
+        };
+        bank?: {
+          type: 'BANKAC' | 'TOKEN' | 'DUMMY';
+          account: string;
+        };
+        proxy?: {
+          type: 'NATID' | 'MSISDN' | 'EWALLETID' | 'EMAIL' | 'BILLERID';
+          account: string;
+        };
+      };
+    };
+    receiver: {
+      bank: {
+        id: string;
+        name?: string;
+        short?: string;
+      };
+      account: {
+        name: {
+          th?: string;
+          en?: string;
+        };
+        bank?: {
+          type: 'BANKAC' | 'TOKEN' | 'DUMMY';
+          account: string;
+        };
+        proxy?: {
+          type: 'NATID' | 'MSISDN' | 'EWALLETID' | 'EMAIL' | 'BILLERID';
+          account: string;
+        };
+      };
+      merchantId?: string;
+    };
+  };
+  message?: string;
+}
+
+function validateReceiver(data: EasySlipResponse): boolean {
+  if (!data.data?.receiver?.account) {
+    return false;
+  }
+
+  const receiver = data.data.receiver.account;
+
+  // Check receiver name (both Thai and English)
+  if (receiver.name?.th !== EXPECTED_RECEIVER.name.th || 
+      receiver.name?.en !== EXPECTED_RECEIVER.name.en) {
+    return false;
+  }
+
+  // Check bank account type and number
+  if (receiver.bank?.type !== EXPECTED_RECEIVER.type || 
+      receiver.bank?.account !== EXPECTED_RECEIVER.account) {
+    return false;
+  }
+
+  return true;
 }
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get('slip') as File;
-    const amount = formData.get('amount');
 
-    if (!file || !amount) {
+    if (!file) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { status: 400, message: 'invalid_payload' },
+        { status: 400 }
+      );
+    }
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { status: 400, message: 'image_size_too_large' },
+        { status: 400 }
+      );
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json(
+        { status: 400, message: 'invalid_image' },
         { status: 400 }
       );
     }
@@ -26,48 +138,43 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(bytes);
     const base64 = buffer.toString('base64');
 
-    // Create payload for the API
-    const payload = {
-      payload: base64,
-      amount: parseFloat(amount as string)
-    };
-
-    // Basic auth credentials
-    const auth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
-
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        image: base64
+      }),
       cache: 'no-store',
     });
 
+    const data: EasySlipResponse = await response.json();
+
+    // Handle different response statuses
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Verification failed');
+      return NextResponse.json(data, { status: response.status });
     }
 
-    const data = await response.json();
+    // Validate receiver information
+    if (!validateReceiver(data)) {
+      return NextResponse.json(
+        { 
+          status: 400, 
+          message: 'invalid_receiver',
+          details: 'Transfer must be to นาย รนกฤต เ account only'
+        },
+        { status: 400 }
+      );
+    }
 
-    // Process the verification result
-    const result = {
-      verified: data.status === 'success',
-      message: data.message || 'Verification completed',
-      data: data
-    };
-
-    return NextResponse.json(result);
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error verifying slip:', error);
     return NextResponse.json(
-      { 
-        error: 'Verification failed', 
-        message: error instanceof Error ? error.message : 'Invalid QR Payload or not Slip Verify API QR'
-      },
-      { status: 400 }
+      { status: 500, message: 'server_error' },
+      { status: 500 }
     );
   }
 }
