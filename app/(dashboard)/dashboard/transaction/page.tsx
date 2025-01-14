@@ -88,7 +88,7 @@ export default function TransactionPage() {
                       -฿{(Number(transaction.amount) * Number(transaction.purchasePrice)).toLocaleString()}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {Number(transaction.amount).toFixed(4)} หน่วย @ ฿{Number(transaction.purchasePrice).toLocaleString()}
+                      {Number(transaction.amount).toFixed(4)} บาท @ ฿{Number(transaction.purchasePrice).toLocaleString()}
                     </p>
                   </div>
                 </div>

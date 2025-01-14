@@ -34,7 +34,25 @@ export default function AssetPage() {
         // Fetch gold assets
         const assetsResponse = await fetch('/api/transactions/history');
         const assetsData = await assetsResponse.json();
-        setAssets(assetsData);
+        
+        // Combine same gold types
+        const combinedAssets = assetsData.reduce((acc: GoldAsset[], curr: GoldAsset) => {
+          const existingAsset = acc.find(asset => asset.goldType === curr.goldType);
+          if (existingAsset) {
+            // Add amounts together
+            existingAsset.amount = (Number(existingAsset.amount) + Number(curr.amount)).toString();
+            // Calculate weighted average purchase price
+            const totalValue = Number(existingAsset.amount) * Number(existingAsset.purchasePrice) + 
+                             Number(curr.amount) * Number(curr.purchasePrice);
+            const totalUnits = Number(existingAsset.amount) + Number(curr.amount);
+            existingAsset.purchasePrice = (totalValue / totalUnits).toString();
+          } else {
+            acc.push({ ...curr });
+          }
+          return acc;
+        }, []);
+
+        setAssets(combinedAssets);
 
         // Fetch current gold prices
         const pricesResponse = await fetch('/api/gold');
@@ -105,8 +123,22 @@ export default function AssetPage() {
                 </p>
               </div>
               <div className="flex gap-8">
-               
-              
+                <div className="text-center">
+                  <p className="text-xl font-semibold text-gray-900">
+                    ฿{balance.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Cash Balance
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-semibold text-gray-900">
+                    ฿{totalAssetValue.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Asset Value
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
