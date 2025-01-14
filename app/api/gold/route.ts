@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/db/drizzle';
+import { markupSettings } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic'; // Disable caching at the route level
 export const fetchCache = 'force-no-store'; // Disable fetch caching
@@ -6,8 +8,15 @@ export const revalidate = 0; // Disable revalidation
 
 export async function GET() {
   try {
+    // Fetch markup settings
+    const [settings] = await db
+      .select()
+      .from(markupSettings)
+      .orderBy(markupSettings.id)
+      .limit(1);
+
     const response = await fetch('http://www.thaigold.info/RealTimeDataV2/gtdata_.txt', {
-      cache: 'no-store', // Disable caching at the fetch level
+      cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
@@ -31,6 +40,46 @@ export async function GET() {
       ];
       return !unwantedTypes.includes(item.name);
     });
+
+    // Apply markup percentages if settings exist
+    if (settings) {
+      return new NextResponse(JSON.stringify(filteredData.map((item: any) => {
+        switch (item.name) {
+          case 'GoldSpot':
+            return {
+              ...item,
+              bid: Number(item.bid) * (1 + Number(settings.goldSpotBid) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.goldSpotAsk) / 100)
+            };
+          case '99.99%':
+            return {
+              ...item,
+              bid: Number(item.bid) * (1 + Number(settings.gold9999Bid) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.gold9999Ask) / 100)
+            };
+          case '96.5%':
+            return {
+              ...item,
+              bid: Number(item.bid) * (1 + Number(settings.gold965Bid) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.gold965Ask) / 100)
+            };
+          case 'สมาคมฯ':
+            return {
+              ...item,
+              bid: Number(item.bid) * (1 + Number(settings.goldAssociationBid) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.goldAssociationAsk) / 100)
+            };
+          default:
+            return item;
+        }
+      })), {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      });
+    }
 
     return new NextResponse(JSON.stringify(filteredData), {
       headers: {
