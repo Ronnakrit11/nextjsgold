@@ -288,7 +288,7 @@ export function GoldPrices() {
               <div className="space-y-2">
                 <Label>จำนวนทอง</Label>
                 <p className="text-lg font-semibold">
-                  {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} หน่วย
+                  {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} บาท
                 </p>
               </div>
             )}
@@ -323,7 +323,7 @@ export function GoldPrices() {
               <div className="space-y-2">
                 <Label>จำนวนทอง</Label>
                 <p className="text-lg font-semibold">
-                  {(Number(moneyAmount) / Number(selectedPrice.bid)).toFixed(4)} หน่วย
+                  {(Number(moneyAmount) / Number(selectedPrice.bid)).toFixed(4)} บาท
                 </p>
               </div>
             )}
@@ -361,11 +361,11 @@ export function GoldPrices() {
                   
                   <div className="flex justify-between">
                     <span className="text-gray-600">จำนวนทอง</span>
-                    <span className="font-medium">{transactionSummary.units.toFixed(4)} หน่วย</span>
+                    <span className="font-medium">{transactionSummary.units.toFixed(4)} บาท</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-gray-600">ราคาต่อหน่วย</span>
+                    <span className="text-gray-600">ราคาต่อบาท</span>
                     <span className="font-medium">฿{transactionSummary.price.toLocaleString()}</span>
                   </div>
                   
