@@ -73,16 +73,13 @@ export function GoldPrices() {
         }
         
         if (curr.type === 'buy') {
-          // For buys, add to both amount and total cost
           acc[goldType].amount += Number(curr.amount);
           acc[goldType].totalCost += Number(curr.totalPrice);
         } else if (curr.type === 'sell') {
-          // For sells, calculate the proportion of cost to remove
           const sellAmount = Number(curr.amount);
           const currentAmount = acc[goldType].amount;
           const sellRatio = sellAmount / currentAmount;
           
-          // Reduce amount and cost proportionally
           acc[goldType].amount -= sellAmount;
           acc[goldType].totalCost = acc[goldType].totalCost * (1 - sellRatio);
         }
@@ -92,7 +89,7 @@ export function GoldPrices() {
 
       // Convert holdings to assets format, only for positive amounts
       const combinedAssets = Object.entries(holdings)
-        .filter(([_, data]) => data.amount > 0)
+        .filter(([_, data]) => data.amount > 0.0001)
         .map(([goldType, data]) => ({
           goldType,
           amount: data.amount.toString(),
@@ -250,6 +247,10 @@ export function GoldPrices() {
     }
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="space-y-4">
       <Card className="bg-gradient-to-r from-orange-500 to-orange-600">
@@ -295,7 +296,7 @@ export function GoldPrices() {
                     {price.name !== "THB" && (
                       <p className="text-sm text-gray-500">0.027 oz</p>
                     )}
-                    {summary.units > 0 && (
+                    {summary.units > 0.0001 && (
                       <p className="text-sm text-orange-600">
                         พอร์ต: {summary.units.toFixed(4)} หน่วย
                       </p>

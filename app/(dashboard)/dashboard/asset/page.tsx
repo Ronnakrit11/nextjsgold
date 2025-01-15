@@ -53,18 +53,15 @@ export default function AssetPage() {
           }
           
           if (curr.type === 'buy') {
-            // For buys, add to both amount and total cost
             acc[goldType].amount += Number(curr.amount);
             acc[goldType].totalCost += Number(curr.totalPrice);
           } else if (curr.type === 'sell') {
-            // For sells, calculate the proportion of cost to remove
             const sellAmount = Number(curr.amount);
             const currentAmount = acc[goldType].amount;
             const sellRatio = sellAmount / currentAmount;
             
-            // Reduce amount and cost proportionally
             acc[goldType].amount -= sellAmount;
-            acc[goldType].totalCost -= acc[goldType].totalCost * sellRatio;
+            acc[goldType].totalCost = acc[goldType].totalCost * (1 - sellRatio);
           }
           
           return acc;
@@ -72,7 +69,7 @@ export default function AssetPage() {
 
         // Convert holdings to assets format, only for positive amounts
         const combinedAssets = Object.entries(holdings)
-          .filter(([_, data]) => data.amount > 0)
+          .filter(([_, data]) => data.amount > 0.0001)
           .map(([goldType, data]) => ({
             goldType,
             amount: data.amount.toString(),
@@ -217,6 +214,9 @@ export default function AssetPage() {
                         <p className="text-sm text-gray-500">
                           {Number(asset.amount).toFixed(4)} บาท
                         </p>
+                        <p className="text-sm text-gray-600">
+                          ต้นทุนเฉลี่ยต่อบาททอง: ฿{Number(asset.purchasePrice).toLocaleString()}
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">฿{currentValue.toLocaleString()}</p>
@@ -226,7 +226,7 @@ export default function AssetPage() {
                       </div>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">ต้นทุน: ฿{purchaseValue.toLocaleString()}</span>
+                      <span className="text-gray-500">ต้นทุนรวม: ฿{purchaseValue.toLocaleString()}</span>
                       <span className={profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
                         {profitLoss >= 0 ? '+' : ''}{profitLoss.toLocaleString()} 
                         ({profitLossPercentage.toFixed(2)}%)
