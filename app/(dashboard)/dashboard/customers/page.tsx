@@ -14,7 +14,7 @@ export default async function CustomersPage() {
     redirect('/sign-in');
   }
 
-  if (currentUser.email !== 'ronnakritnook1@gmail.com') {
+  if (currentUser.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
         <Card>
@@ -22,7 +22,7 @@ export default async function CustomersPage() {
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
             <p className="text-gray-500 text-center max-w-md">
-              Only administrators have access to the customer list. Please contact the administrator for assistance.
+              Only administrators have access to the customer list. Please contact an administrator for assistance.
             </p>
           </CardContent>
         </Card>

@@ -43,7 +43,7 @@ export default function WebsiteSettingsPage() {
     redirect('/sign-in');
   }
 
-  if (user.email !== 'ronnakritnook1@gmail.com') {
+  if (user.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
         <Card>
@@ -51,13 +51,14 @@ export default function WebsiteSettingsPage() {
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
             <p className="text-gray-500 text-center max-w-md">
-              Only administrators have access to website settings. Please contact the administrator for assistance.
+              Only administrators have access to website settings. Please contact an administrator for assistance.
             </p>
           </CardContent>
         </Card>
       </section>
     );
   }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

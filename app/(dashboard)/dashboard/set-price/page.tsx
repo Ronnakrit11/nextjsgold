@@ -9,8 +9,6 @@ import { useUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
 
-const ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
-
 interface MarkupSettings {
   gold_spot_bid: number;
   gold_spot_ask: number;
@@ -56,7 +54,7 @@ export default function SetPricePage() {
     redirect('/sign-in');
   }
 
-  if (user.email !== ADMIN_EMAIL) {
+  if (user.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
         <Card>
@@ -64,7 +62,7 @@ export default function SetPricePage() {
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
             <p className="text-gray-500 text-center max-w-md">
-              Only the administrator has access to the price settings. Please contact the administrator for assistance.
+              Only administrators have access to the price settings. Please contact an administrator for assistance.
             </p>
           </CardContent>
         </Card>
