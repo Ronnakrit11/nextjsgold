@@ -43,34 +43,41 @@ export default function AssetPage() {
 
         // Fetch gold assets
         const assetsResponse = await fetch('/api/transactions/history');
-        const assetsData = (await assetsResponse.json()) as Transaction[];
+        const transactions = (await assetsResponse.json()) as Transaction[];
         
-        // Process transactions to calculate current holdings and cost basis
-        const holdings = assetsData.reduce((acc: Record<string, { amount: number, totalCost: number }>, curr) => {
+        // Process transactions to calculate current holdings
+        const holdings = transactions.reduce((acc: Record<string, { amount: number, totalCost: number }>, curr) => {
           const goldType = curr.goldType;
           if (!acc[goldType]) {
             acc[goldType] = { amount: 0, totalCost: 0 };
           }
           
           if (curr.type === 'buy') {
+            // For buys, add to both amount and total cost
             acc[goldType].amount += Number(curr.amount);
             acc[goldType].totalCost += Number(curr.totalPrice);
           } else if (curr.type === 'sell') {
-            acc[goldType].amount -= Number(curr.amount);
-            // For sells, reduce cost basis proportionally
-            const costPerUnit = acc[goldType].totalCost / (acc[goldType].amount + Number(curr.amount));
-            acc[goldType].totalCost -= costPerUnit * Number(curr.amount);
+            // For sells, calculate the proportion of cost to remove
+            const sellAmount = Number(curr.amount);
+            const currentAmount = acc[goldType].amount;
+            const sellRatio = sellAmount / currentAmount;
+            
+            // Reduce amount and cost proportionally
+            acc[goldType].amount -= sellAmount;
+            acc[goldType].totalCost -= acc[goldType].totalCost * sellRatio;
           }
           
           return acc;
         }, {});
 
-        // Convert holdings to assets format
-        const combinedAssets = Object.entries(holdings).map(([goldType, data]) => ({
-          goldType,
-          amount: data.amount.toString(),
-          purchasePrice: (data.amount > 0 ? data.totalCost / data.amount : 0).toString()
-        })).filter(asset => Number(asset.amount) > 0);
+        // Convert holdings to assets format, only for positive amounts
+        const combinedAssets = Object.entries(holdings)
+          .filter(([_, data]) => data.amount > 0)
+          .map(([goldType, data]) => ({
+            goldType,
+            amount: data.amount.toString(),
+            purchasePrice: (data.totalCost / data.amount).toString()
+          }));
 
         setAssets(combinedAssets);
 
@@ -124,46 +131,38 @@ export default function AssetPage() {
       </h1>
       
       <div className="grid gap-6 md:grid-cols-3">
-        {/* Account Value Card */}
         <Card className="md:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <PieChart className="h-6 w-6 text-orange-500" />
-              <span className='text-sm '>Account Value</span>
+              <span className='text-sm'>Account Value</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-center md:text-left">
                 <p className="text-xl font-bold text-orange-500">
-                 {totalAccountValue.toLocaleString()}  ฿
+                  {totalAccountValue.toLocaleString()} ฿
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   มูลค่ารวมในพอร์ต
                 </p>
               </div>
-              <div className="flex gap-8">
-                <div className="text-center">
-                </div>
-                <div className="text-center">
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Balance Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 ">
-              <Wallet className=" h-6 w-6 text-orange-500" />
+            <CardTitle className="flex items-center space-x-2">
+              <Wallet className="h-6 w-6 text-orange-500" />
               <span className='text-sm'>เงินสดในพอร์ต</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mt-2">
               <p className="text-xl font-bold text-orange-500">
-               {balance.toLocaleString()}  ฿
+                {balance.toLocaleString()} ฿
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 Total Available Balance
@@ -172,12 +171,11 @@ export default function AssetPage() {
           </CardContent>
         </Card>
 
-        {/* Asset Distribution Card */}
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <BarChart2 className="h-6 w-6 text-orange-500" />
-              <span className='text-sm '>Asset Distribution</span>
+              <span className='text-sm'>Asset Distribution</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -193,7 +191,6 @@ export default function AssetPage() {
         </Card>
       </div>
 
-      {/* Asset Holdings Card */}
       <Card className="mt-8">
         <CardHeader>
           <CardTitle>Asset Holdings</CardTitle>
@@ -206,7 +203,8 @@ export default function AssetPage() {
                 const currentValue = Number(asset.amount) * buybackPrice;
                 const purchaseValue = Number(asset.amount) * Number(asset.purchasePrice);
                 const profitLoss = currentValue - purchaseValue;
-                const profitLossPercentage = purchaseValue > 0 ? (profitLoss / purchaseValue) * 100 : 0;
+                const profitLossPercentage = purchaseValue !== 0 ? 
+                  (profitLoss / purchaseValue) * 100 : 0;
 
                 return (
                   <div 

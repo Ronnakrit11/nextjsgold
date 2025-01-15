@@ -23,6 +23,7 @@ interface GoldAsset {
 }
 
 interface Transaction {
+  id: number;
   goldType: string;
   amount: string;
   pricePerUnit: string;
@@ -53,26 +54,6 @@ export function GoldPrices() {
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [transactionSummary, setTransactionSummary] = useState<TransactionSummary | null>(null);
 
-  const formatDateTime = (date: Date) => {
-    return new Intl.DateTimeFormat('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    }).format(date);
-  };
-
-  const getPortfolioSummary = (goldType: string) => {
-    const asset = assets.find(a => a.goldType === goldType);
-    return {
-      units: asset ? Number(asset.amount) : 0,
-      value: asset ? Number(asset.amount) * Number(asset.purchasePrice) : 0
-    };
-  };
-
   async function fetchData() {
     try {
       // Fetch user balance
@@ -85,32 +66,37 @@ export function GoldPrices() {
       const transactions = (await assetsResponse.json()) as Transaction[];
       
       // Process transactions to calculate current holdings
-      const holdings = transactions.reduce((acc: Record<string, { amount: number, totalCost: number }>, curr: Transaction) => {
+      const holdings = transactions.reduce((acc: Record<string, { amount: number, totalCost: number }>, curr) => {
         const goldType = curr.goldType;
         if (!acc[goldType]) {
           acc[goldType] = { amount: 0, totalCost: 0 };
         }
         
         if (curr.type === 'buy') {
+          // For buys, add to both amount and total cost
           acc[goldType].amount += Number(curr.amount);
           acc[goldType].totalCost += Number(curr.totalPrice);
         } else if (curr.type === 'sell') {
-          acc[goldType].amount -= Number(curr.amount);
-          // For sells, reduce cost basis proportionally
-          const costPerUnit = acc[goldType].totalCost / (acc[goldType].amount + Number(curr.amount));
-          acc[goldType].totalCost -= costPerUnit * Number(curr.amount);
+          // For sells, calculate the proportion of cost to remove
+          const sellAmount = Number(curr.amount);
+          const currentAmount = acc[goldType].amount;
+          const sellRatio = sellAmount / currentAmount;
+          
+          // Reduce amount and cost proportionally
+          acc[goldType].amount -= sellAmount;
+          acc[goldType].totalCost = acc[goldType].totalCost * (1 - sellRatio);
         }
         
         return acc;
       }, {});
 
-      // Convert holdings to assets format
+      // Convert holdings to assets format, only for positive amounts
       const combinedAssets = Object.entries(holdings)
-        .filter(([_, data]) => data.amount > 0) // Only include assets with positive amounts
+        .filter(([_, data]) => data.amount > 0)
         .map(([goldType, data]) => ({
           goldType,
           amount: data.amount.toString(),
-          purchasePrice: (data.amount > 0 ? data.totalCost / data.amount : 0).toString()
+          purchasePrice: (data.totalCost / data.amount).toString()
         }));
 
       setAssets(combinedAssets);
@@ -129,10 +115,17 @@ export function GoldPrices() {
 
   useEffect(() => {
     fetchData();
-    // Set up polling every 5 seconds
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const getPortfolioSummary = (goldType: string) => {
+    const asset = assets.find(a => a.goldType === goldType);
+    return {
+      units: asset ? Number(asset.amount) : 0,
+      value: asset ? Number(asset.amount) * Number(asset.purchasePrice) : 0
+    };
+  };
 
   const handleBuyClick = (price: GoldPrice) => {
     setSelectedPrice(price);
@@ -184,7 +177,7 @@ export function GoldPrices() {
 
       const data = await response.json();
       setBalance(data.balance);
-      await fetchData(); // Refresh assets
+      await fetchData();
       
       setTransactionSummary({
         goldType,
@@ -239,7 +232,7 @@ export function GoldPrices() {
 
       const data = await response.json();
       setBalance(data.balance);
-      await fetchData(); // Refresh assets
+      await fetchData();
 
       setTransactionSummary({
         goldType,
@@ -259,7 +252,6 @@ export function GoldPrices() {
 
   return (
     <div className="space-y-4">
-      {/* Balance Display */}
       <Card className="bg-gradient-to-r from-orange-500 to-orange-600">
         <CardContent className="p-6">
           <div className="text-white">
@@ -273,96 +265,88 @@ export function GoldPrices() {
         </CardContent>
       </Card>
 
-      {/* Last Update Time Display */}
       <div className="text-center text-gray-600 text-sm -mt-2 mb-2">
-        อัพเดทล่าสุด: {formatDateTime(lastUpdate)}
+        อัพเดทล่าสุด: {lastUpdate.toLocaleString('th-TH')}
       </div>
 
-      {/* Gold Price Cards */}
-      {prices.map((price, index) => (
-        <Card key={index} className="bg-white overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-yellow-50 rounded-full flex items-center justify-center">
-                  <Image
-                    src="/gold.png"
-                    alt="Gold"
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
+      {prices.map((price, index) => {
+        const goldType = price.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                        price.name === "99.99%" ? "ทอง 99.99%" : 
+                        price.name === "96.5%" ? "ทอง 96.5%" : 
+                        price.name;
+        const summary = getPortfolioSummary(goldType);
+
+        return (
+          <Card key={index} className="bg-white overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 bg-yellow-50 rounded-full flex items-center justify-center">
+                    <Image
+                      src="/gold.png"
+                      alt="Gold"
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">{goldType}</h3>
+                    {price.name !== "THB" && (
+                      <p className="text-sm text-gray-500">0.027 oz</p>
+                    )}
+                    {summary.units > 0 && (
+                      <p className="text-sm text-orange-600">
+                        พอร์ต: {summary.units.toFixed(4)} หน่วย
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => handleBuyClick(price)}
+                    className="bg-green-500 hover:bg-green-600 text-white h-8 w-16"
+                    size="sm"
+                  >
+                    ซื้อ
+                  </Button>
+                  <Button
+                    onClick={() => handleSellClick(price)}
+                    className="bg-red-500 hover:bg-red-600 text-white h-8 w-16"
+                    size="sm"
+                  >
+                    ขาย
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">ราคารับซื้อ</p>
+                  <p className="text-md font-semibold text-gray-900">
+                    {price.name === "GoldSpot" ? 
+                      `$${Number(price.bid).toLocaleString()}` : 
+                      `${Number(price.bid).toLocaleString()} บาท`}
+                  </p>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {price.name === "สมาคมฯ" ? "ทองสมาคม" : 
-                     price.name === "99.99%" ? "ทอง 99.99%" : 
-                     price.name === "96.5%" ? "ทอง 96.5%" : 
-                     price.name}
-                  </h3>
-                  {price.name !== "THB" && (
-                    <p className="text-sm text-gray-500">0.027 oz</p>
-                  )}
-                  {(() => {
-                    const goldType = price.name === "สมาคมฯ" ? "ทองสมาคม" : 
-                                   price.name === "99.99%" ? "ทอง 99.99%" : 
-                                   price.name === "96.5%" ? "ทอง 96.5%" : 
-                                   price.name;
-                    const summary = getPortfolioSummary(goldType);
-                    if (summary.units > 0) {
-                      return (
-                        <p className="text-sm text-orange-600">
-                          พอร์ต: {summary.units.toFixed(4)} หน่วย
-                        </p>
-                      );
-                    }
-                  })()}
+                  <p className="text-sm text-gray-500">ราคาขายออก</p>
+                  <p className="text-md font-semibold text-gray-900">
+                    {price.name === "GoldSpot" ? 
+                      `$${Number(price.ask).toLocaleString()}` : 
+                      `${Number(price.ask).toLocaleString()} บาท`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Change</p>
+                  <p className={`text-lg font-semibold ${Number(price.diff) > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {Number(price.diff).toFixed(2)}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => handleBuyClick(price)}
-                  className="bg-green-500 hover:bg-green-600 text-white h-8 w-16"
-                  size="sm"
-                >
-                  ซื้อ
-                </Button>
-                <Button
-                  onClick={() => handleSellClick(price)}
-                  className="bg-red-500 hover:bg-red-600 text-white h-8 w-16"
-                  size="sm"
-                >
-                  ขาย
-                </Button>
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">ราคารับซื้อ</p>
-                <p className="text-md font-semibold text-gray-900">
-                  {price.name === "GoldSpot" ? 
-                    `$${Number(price.bid).toLocaleString()}` : 
-                    `${Number(price.bid).toLocaleString()} บาท`}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">ราคาขายออก</p>
-                <p className="text-md font-semibold text-gray-900">
-                  {price.name === "GoldSpot" ? 
-                    `$${Number(price.ask).toLocaleString()}` : 
-                    `${Number(price.ask).toLocaleString()} บาท`}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Change</p>
-                <p className={`text-lg font-semibold ${Number(price.diff) > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {Number(price.diff).toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {/* Buy Dialog */}
       <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
@@ -465,10 +449,7 @@ export function GoldPrices() {
       </Dialog>
 
       {/* Summary Dialog */}
-      <Dialog 
-        open={showSummaryDialog} 
-        onOpenChange={setShowSummaryDialog}
-      >
+      <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
