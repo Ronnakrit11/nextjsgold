@@ -22,6 +22,15 @@ interface GoldAsset {
   purchasePrice: string;
 }
 
+interface Transaction {
+  goldType: string;
+  amount: string;
+  pricePerUnit: string;
+  totalPrice: string;
+  type: 'buy' | 'sell';
+  createdAt: string;
+}
+
 interface TransactionSummary {
   goldType: string;
   units: number;
@@ -73,22 +82,36 @@ export function GoldPrices() {
 
       // Fetch gold assets
       const assetsResponse = await fetch('/api/transactions/history');
-      const assetsData = await assetsResponse.json();
+      const transactions = (await assetsResponse.json()) as Transaction[];
       
-      // Combine same gold types
-      const combinedAssets = assetsData.reduce((acc: GoldAsset[], curr: GoldAsset) => {
-        const existingAsset = acc.find(asset => asset.goldType === curr.goldType);
-        if (existingAsset) {
-          existingAsset.amount = (Number(existingAsset.amount) + Number(curr.amount)).toString();
-          const totalValue = Number(existingAsset.amount) * Number(existingAsset.purchasePrice) + 
-                           Number(curr.amount) * Number(curr.purchasePrice);
-          const totalUnits = Number(existingAsset.amount) + Number(curr.amount);
-          existingAsset.purchasePrice = (totalValue / totalUnits).toString();
-        } else {
-          acc.push({ ...curr });
+      // Process transactions to calculate current holdings
+      const holdings = transactions.reduce((acc: Record<string, { amount: number, totalCost: number }>, curr: Transaction) => {
+        const goldType = curr.goldType;
+        if (!acc[goldType]) {
+          acc[goldType] = { amount: 0, totalCost: 0 };
         }
+        
+        if (curr.type === 'buy') {
+          acc[goldType].amount += Number(curr.amount);
+          acc[goldType].totalCost += Number(curr.totalPrice);
+        } else if (curr.type === 'sell') {
+          acc[goldType].amount -= Number(curr.amount);
+          // For sells, reduce cost basis proportionally
+          const costPerUnit = acc[goldType].totalCost / (acc[goldType].amount + Number(curr.amount));
+          acc[goldType].totalCost -= costPerUnit * Number(curr.amount);
+        }
+        
         return acc;
-      }, []);
+      }, {});
+
+      // Convert holdings to assets format
+      const combinedAssets = Object.entries(holdings)
+        .filter(([_, data]) => data.amount > 0) // Only include assets with positive amounts
+        .map(([goldType, data]) => ({
+          goldType,
+          amount: data.amount.toString(),
+          purchasePrice: (data.amount > 0 ? data.totalCost / data.amount : 0).toString()
+        }));
 
       setAssets(combinedAssets);
 
