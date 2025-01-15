@@ -294,7 +294,7 @@ export function GoldPrices() {
                     )}
                     {summary.units > 0.0001 && (
                       <p className="text-sm text-orange-600">
-                        พอร์ต: {summary.units.toFixed(4)} หน่วย
+                        พอร์ต: {summary.units.toFixed(4)} บาท
                       </p>
                     )}
                   </div>
