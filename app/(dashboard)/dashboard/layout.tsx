@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, Lock } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -19,11 +19,11 @@ export default function DashboardLayout({
     href: string;
     icon: any;
     label: string;
-    isAdmin?: boolean;
   }>>([]);
 
   useEffect(() => {
-    const isAdmin = user?.email === 'ronnakritnook1@gmail.com';
+    // Check if user is admin either by role or being the main admin email
+    const isAdmin = user?.role === 'admin' || user?.email === 'ronnakritnook1@gmail.com';
     
     const baseItems = [
       { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
@@ -36,11 +36,10 @@ export default function DashboardLayout({
     ];
 
     const adminItems = [
-      { href: '/dashboard/set-price', icon: Settings, label: 'Set Price', isAdmin: true },
-      { href: '/dashboard/customers', icon: UserCircle, label: 'Customers', isAdmin: true },
-      { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting', isAdmin: true },
-      { href: '/dashboard/admin', icon: Lock, label: 'Admin', isAdmin: true },
-      { href: '/dashboard', icon: Users, label: 'Team', isAdmin: true },
+      { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
+      { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
+      { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting' },
+      { href: '/dashboard/admin', icon: Shield, label: 'Admin Management' },
     ];
 
     setNavItems(isAdmin ? [...baseItems, ...adminItems] : baseItems);
@@ -79,10 +78,10 @@ export default function DashboardLayout({
                   variant={pathname === item.href ? 'secondary' : 'ghost'}
                   className={`my-1 w-full justify-start ${
                     pathname === item.href ? 'bg-gray-100' : ''
-                  } ${item.isAdmin ? 'text-orange-600' : ''}`}
+                  }`}
                   onClick={() => setIsSidebarOpen(false)}
                 >
-                  <item.icon className={`mr-2 h-4 w-4 ${item.isAdmin ? 'text-orange-600' : ''}`} />
+                  <item.icon className="mr-2 h-4 w-4" />
                   {item.label}
                 </Button>
               </Link>
