@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { userBalances, goldAssets, transactions } from '@/lib/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, sum } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 
 export async function POST(request: Request) {
@@ -20,8 +20,27 @@ export async function POST(request: Request) {
 
     // Start a transaction
     const result = await db.transaction(async (tx) => {
-      // Check if user has enough gold to sell
-      const [existingAsset] = await tx
+      // Calculate total gold holdings for this type
+      const [totalGold] = await tx
+        .select({
+          total: sql<string>`sum(${goldAssets.amount})`
+        })
+        .from(goldAssets)
+        .where(
+          and(
+            eq(goldAssets.userId, user.id),
+            eq(goldAssets.goldType, goldType)
+          )
+        );
+
+      const currentBalance = Number(totalGold?.total || 0);
+      
+      if (currentBalance < amount) {
+        throw new Error(`Insufficient gold balance. You have ${currentBalance} units available.`);
+      }
+
+      // Get all gold assets for this type
+      const assets = await tx
         .select()
         .from(goldAssets)
         .where(
@@ -30,20 +49,31 @@ export async function POST(request: Request) {
             eq(goldAssets.goldType, goldType)
           )
         )
-        .limit(1);
+        .orderBy(goldAssets.createdAt);
 
-      if (!existingAsset || Number(existingAsset.amount) < amount) {
-        throw new Error('Insufficient gold balance');
+      let remainingAmountToSell = Number(amount);
+      
+      // Process each asset until we've sold the requested amount
+      for (const asset of assets) {
+        const assetAmount = Number(asset.amount);
+        if (assetAmount <= 0) continue;
+
+        const amountToSellFromAsset = Math.min(assetAmount, remainingAmountToSell);
+        
+        if (amountToSellFromAsset > 0) {
+          await tx
+            .update(goldAssets)
+            .set({
+              amount: sql`${goldAssets.amount} - ${amountToSellFromAsset}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(goldAssets.id, asset.id));
+
+          remainingAmountToSell -= amountToSellFromAsset;
+        }
+
+        if (remainingAmountToSell <= 0) break;
       }
-
-      // Update gold assets
-      await tx
-        .update(goldAssets)
-        .set({
-          amount: sql`${goldAssets.amount} - ${amount}`,
-          updatedAt: new Date(),
-        })
-        .where(eq(goldAssets.id, existingAsset.id));
 
       // Update user balance
       await tx
@@ -71,15 +101,21 @@ export async function POST(request: Request) {
         .where(eq(userBalances.userId, user.id))
         .limit(1);
 
-      const [newAsset] = await tx
-        .select()
+      const [newTotalGold] = await tx
+        .select({
+          total: sql<string>`sum(${goldAssets.amount})`
+        })
         .from(goldAssets)
-        .where(eq(goldAssets.id, existingAsset.id))
-        .limit(1);
+        .where(
+          and(
+            eq(goldAssets.userId, user.id),
+            eq(goldAssets.goldType, goldType)
+          )
+        );
 
       return {
         balance: newBalance.balance,
-        goldAmount: newAsset.amount
+        goldAmount: newTotalGold.total || '0'
       };
     });
 
