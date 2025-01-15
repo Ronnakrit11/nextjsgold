@@ -4,13 +4,11 @@ import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 
-const MAIN_ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
-
 export async function GET() {
   try {
     const currentUser = await getUser();
     
-    if (!currentUser || currentUser.email !== MAIN_ADMIN_EMAIL) {
+    if (!currentUser || currentUser.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

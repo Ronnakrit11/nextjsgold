@@ -22,8 +22,8 @@ export default function DashboardLayout({
   }>>([]);
 
   useEffect(() => {
-    // Check if user is admin either by role or being the main admin email
-    const isAdmin = user?.role === 'admin' || user?.email === 'ronnakritnook1@gmail.com';
+    // Check if user is admin
+    const isAdmin = user?.role === 'admin';
     
     const baseItems = [
       { href: '/dashboard/gold', icon: Coins, label: 'Gold' },

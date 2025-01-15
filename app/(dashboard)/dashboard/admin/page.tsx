@@ -21,39 +21,41 @@ interface Admin {
 const MAIN_ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
 
 export default function AdminPage() {
-  const { user } = useUser();
-  const [admins, setAdmins] = useState<Admin[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
-
-  useEffect(() => {
-    fetchAdmins();
-  }, []);
-
-  if (!user) {
-    redirect('/sign-in');
-  }
-
-  if (user.email !== MAIN_ADMIN_EMAIL) {
-    return (
-      <section className="flex-1 p-4 lg:p-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-500 text-center max-w-md">
-              Only the main administrator has access to this page.
-            </p>
-          </CardContent>
-        </Card>
-      </section>
-    );
-  }
+    const { user } = useUser();
+    const [admins, setAdmins] = useState<Admin[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
+    const [formData, setFormData] = useState({
+      name: '',
+      email: '',
+      password: '',
+    });
+  
+    useEffect(() => {
+      fetchAdmins();
+    }, []);
+  
+    if (!user) {
+      redirect('/sign-in');
+    }
+  
+    // Check if user is an admin
+    if (user.role !== 'admin') {
+      return (
+        <section className="flex-1 p-4 lg:p-8">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+              <p className="text-gray-500 text-center max-w-md">
+                Only administrators have access to this page.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+      );
+    }
+  
 
   async function fetchAdmins() {
     try {

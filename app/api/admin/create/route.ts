@@ -5,13 +5,11 @@ import { getUser } from '@/lib/db/queries';
 import { hashPassword } from '@/lib/auth/session';
 import { eq } from 'drizzle-orm';
 
-const MAIN_ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
-
 export async function POST(request: Request) {
   try {
     const currentUser = await getUser();
     
-    if (!currentUser || currentUser.email !== MAIN_ADMIN_EMAIL) {
+    if (!currentUser || currentUser.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
