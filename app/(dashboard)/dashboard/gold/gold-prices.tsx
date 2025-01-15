@@ -78,10 +78,10 @@ export function GoldPrices() {
         } else if (curr.type === 'sell') {
           const sellAmount = Number(curr.amount);
           const currentAmount = acc[goldType].amount;
-          const sellRatio = sellAmount / currentAmount;
+          const avgCostPerUnit = acc[goldType].totalCost / currentAmount;
           
           acc[goldType].amount -= sellAmount;
-          acc[goldType].totalCost = acc[goldType].totalCost * (1 - sellRatio);
+          acc[goldType].totalCost = acc[goldType].amount * avgCostPerUnit;
         }
         
         return acc;
@@ -247,10 +247,6 @@ export function GoldPrices() {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="space-y-4">
       <Card className="bg-gradient-to-r from-orange-500 to-orange-600">
@@ -402,12 +398,12 @@ export function GoldPrices() {
                               selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
                               selectedPrice.name;
               const summary = getPortfolioSummary(goldType);
-              return (
+              return summary.units > 0.0001 ? (
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600">ทองในพอร์ต</p>
                   <p className="text-lg font-semibold">{summary.units.toFixed(4)} หน่วย</p>
                 </div>
-              );
+              ) : null;
             })()}
             <div className="space-y-2">
               <Label>จำนวนหน่วยที่ต้องการขาย</Label>
@@ -429,6 +425,23 @@ export function GoldPrices() {
                 }}
                 placeholder="ระบุจำนวนหน่วยที่ต้องการขาย"
               />
+              {/* Add Sell All Button */}
+              <Button
+                type="button"
+                onClick={() => {
+                  if (selectedPrice) {
+                    const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                                    selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
+                                    selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
+                                    selectedPrice.name;
+                    const summary = getPortfolioSummary(goldType);
+                    setSellUnits(summary.units.toString());
+                  }
+                }}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white mt-2"
+              >
+                ขายทั้งหมด
+              </Button>
             </div>
             {sellUnits && selectedPrice && (
               <div className="space-y-2">

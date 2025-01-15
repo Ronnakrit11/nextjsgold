@@ -58,10 +58,10 @@ export default function AssetPage() {
           } else if (curr.type === 'sell') {
             const sellAmount = Number(curr.amount);
             const currentAmount = acc[goldType].amount;
-            const sellRatio = sellAmount / currentAmount;
+            const avgCostPerUnit = acc[goldType].totalCost / currentAmount;
             
             acc[goldType].amount -= sellAmount;
-            acc[goldType].totalCost = acc[goldType].totalCost * (1 - sellRatio);
+            acc[goldType].totalCost = acc[goldType].amount * avgCostPerUnit;
           }
           
           return acc;
@@ -78,7 +78,7 @@ export default function AssetPage() {
 
         setAssets(combinedAssets);
 
-        // Fetch current gold prices
+        // Fetch gold prices
         const pricesResponse = await fetch('/api/gold');
         const pricesData = await pricesResponse.json();
         setPrices(pricesData);
@@ -205,34 +205,38 @@ export default function AssetPage() {
 
                 return (
                   <div 
-                    key={index}
-                    className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-medium text-lg">{asset.goldType}</h3>
-                        <p className="text-sm text-gray-500">
-                          {Number(asset.amount).toFixed(4)} บาท
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          ต้นทุนเฉลี่ยต่อบาททอง: ฿{Number(asset.purchasePrice).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">฿{currentValue.toLocaleString()}</p>
-                        <p className="text-sm text-gray-500">
-                          ราคารับซื้อ: ฿{buybackPrice.toLocaleString()}
-                        </p>
-                      </div>
+                  key={index}
+                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex justify-between items-start mb-0">
+                    <div>
+                      <h3 className="font-medium text-lg">{asset.goldType}</h3>
+                      <p className="text-sm text-gray-500">
+                        {Number(asset.amount).toFixed(4)} บาท
+                      </p>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">ต้นทุนรวม: ฿{purchaseValue.toLocaleString()}</span>
-                      <span className={profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    <div className="text-right">
+                      <p className="font-medium mb-1">฿{currentValue.toLocaleString()}</p>
+                      <p className="text-sm text-gray-500">
+                        ราคารับซื้อ: ฿{buybackPrice.toLocaleString()}
+                      </p>
+                      <p className={`text-sm ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {profitLoss >= 0 ? '+' : ''}{profitLoss.toLocaleString()} 
                         ({profitLossPercentage.toFixed(2)}%)
-                      </span>
+                      </p>
                     </div>
                   </div>
+                  <div className="flex justify-between text-[13px] pt-0">
+                    <div>
+                      <p className="text-gray-500">
+                        ต้นทุนเฉลี่ย: ฿{Number(asset.purchasePrice).toLocaleString()}
+                      </p>
+                      <p className="text-gray-500">
+                        ต้นทุนรวม: ฿{purchaseValue.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 );
               })}
             </div>
