@@ -23,7 +23,7 @@ export default function DashboardLayout({
   }>>([]);
 
   useEffect(() => {
-    const isAdmin = user?.role === 'admin' || user?.email === 'ronnakritnook1@gmail.com';
+    const isAdmin = user?.email === 'ronnakritnook1@gmail.com';
     
     const baseItems = [
       { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
@@ -39,10 +39,10 @@ export default function DashboardLayout({
       { href: '/dashboard/set-price', icon: Settings, label: 'Set Price', isAdmin: true },
       { href: '/dashboard/customers', icon: UserCircle, label: 'Customers', isAdmin: true },
       { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting', isAdmin: true },
+      { href: '/dashboard/admin', icon: Lock, label: 'Admin', isAdmin: true },
       { href: '/dashboard', icon: Users, label: 'Team', isAdmin: true },
     ];
 
-    // Only add admin menu if user is admin
     setNavItems(isAdmin ? [...baseItems, ...adminItems] : baseItems);
   }, [user]);
 
