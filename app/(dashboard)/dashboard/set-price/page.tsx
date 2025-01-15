@@ -7,6 +7,7 @@ import { Tag, Save, ShieldAlert } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { toast } from 'sonner';
 
 const ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
 
@@ -33,6 +34,7 @@ export default function SetPricePage() {
     gold_association_bid: 0,
     gold_association_ask: 0,
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     async function fetchMarkupSettings() {
@@ -70,8 +72,10 @@ export default function SetPricePage() {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
+    
     try {
       const response = await fetch('/api/markup', {
         method: 'POST',
@@ -94,10 +98,12 @@ export default function SetPricePage() {
         throw new Error('Failed to update markup settings');
       }
 
-      alert('Markup settings updated successfully');
+      toast.success('ตั้งค่าราคาสำเร็จ');
     } catch (error) {
       console.error('Error updating markup settings:', error);
-      alert('Failed to update markup settings');
+      toast.error('เกิดข้อผิดพลาดในการตั้งค่าราคา');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -118,7 +124,7 @@ export default function SetPricePage() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Tag className="h-6 w-6 text-orange-500" />
-            <span>Gold Price  Settings</span>
+            <span>Gold Price Settings</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -126,7 +132,7 @@ export default function SetPricePage() {
             <div className="grid gap-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_spot_bid">Gold Spot Bid  (%)</Label>
+                  <Label htmlFor="gold_spot_bid">Gold Spot Bid (%)</Label>
                   <Input
                     id="gold_spot_bid"
                     name="gold_spot_bid"
@@ -139,7 +145,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_spot_ask">Gold Spot Ask  (%)</Label>
+                  <Label htmlFor="gold_spot_ask">Gold Spot Ask (%)</Label>
                   <Input
                     id="gold_spot_ask"
                     name="gold_spot_ask"
@@ -155,7 +161,7 @@ export default function SetPricePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_9999_bid">Gold 99.99% Bid  (%)</Label>
+                  <Label htmlFor="gold_9999_bid">Gold 99.99% Bid (%)</Label>
                   <Input
                     id="gold_9999_bid"
                     name="gold_9999_bid"
@@ -168,7 +174,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_9999_ask">Gold 99.99% Ask  (%)</Label>
+                  <Label htmlFor="gold_9999_ask">Gold 99.99% Ask (%)</Label>
                   <Input
                     id="gold_9999_ask"
                     name="gold_9999_ask"
@@ -184,7 +190,7 @@ export default function SetPricePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_965_bid">Gold 96.5% Bid  (%)</Label>
+                  <Label htmlFor="gold_965_bid">Gold 96.5% Bid (%)</Label>
                   <Input
                     id="gold_965_bid"
                     name="gold_965_bid"
@@ -197,7 +203,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_965_ask">Gold 96.5% Ask  (%)</Label>
+                  <Label htmlFor="gold_965_ask">Gold 96.5% Ask (%)</Label>
                   <Input
                     id="gold_965_ask"
                     name="gold_965_ask"
@@ -213,7 +219,7 @@ export default function SetPricePage() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_association_bid">Gold Association Bid  (%)</Label>
+                  <Label htmlFor="gold_association_bid">Gold Association Bid (%)</Label>
                   <Input
                     id="gold_association_bid"
                     name="gold_association_bid"
@@ -226,7 +232,7 @@ export default function SetPricePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_association_ask">Gold Association Ask  (%)</Label>
+                  <Label htmlFor="gold_association_ask">Gold Association Ask (%)</Label>
                   <Input
                     id="gold_association_ask"
                     name="gold_association_ask"
@@ -244,9 +250,19 @@ export default function SetPricePage() {
             <Button 
               type="submit" 
               className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+              disabled={isSaving}
             >
-              <Save className="w-4 h-4 mr-2" />
-              Save Price Settings
+              {isSaving ? (
+                <>
+                  <Save className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Price Settings
+                </>
+              )}
             </Button>
           </form>
         </CardContent>
