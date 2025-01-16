@@ -4,6 +4,7 @@ import { Terminal } from './terminal';
 import { GoldChart } from '@/components/GoldChart';
 import { SocialContacts } from '@/components/SocialContacts';
 import Link from 'next/link';
+import { GoldPricesHome } from '@/components/GoldPricesHome';
 
 export default function HomePage() {
   return (
@@ -39,6 +40,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Gold Price Chart</h2>
           <GoldChart />
+          <div className="mt-8">
+            <GoldPricesHome />
+          </div>
         </div>
       </section>
 
