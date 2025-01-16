@@ -17,6 +17,19 @@ interface VerifiedSlip {
   status: 'completed' | 'pending';
 }
 
+// Store used payloads in localStorage
+const getStoredPayloads = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('usedPayloads');
+  return stored ? JSON.parse(stored) : [];
+};
+
+const storePayload = (payload: string) => {
+  const payloads = getStoredPayloads();
+  payloads.push(payload);
+  localStorage.setItem('usedPayloads', JSON.stringify(payloads));
+};
+
 export default function DepositPage() {
   const { user } = useUser();
   const [amount, setAmount] = useState('');
@@ -24,7 +37,6 @@ export default function DepositPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [recentDeposits, setRecentDeposits] = useState<VerifiedSlip[]>([]);
-  const [usedPayloads, setUsedPayloads] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchRecentDeposits() {
@@ -53,19 +65,23 @@ export default function DepositPage() {
     }
 
     try {
-      // Read the file content
+      setIsVerifying(true);
+
+      // Read file as base64
       const fileReader = new FileReader();
+      
       fileReader.onload = async () => {
         const base64Content = fileReader.result?.toString() || '';
-        
-        // Check if this payload has been used before
-        if (usedPayloads.has(base64Content)) {
-          toast.error('สลิปนี้ถูกใช้ไปแล้ว');
+        const usedPayloads = getStoredPayloads();
+
+        // Check if payload already exists
+        if (usedPayloads.includes(base64Content)) {
+          setIsVerifying(false);
+          toast.error('สลิปถูกใช้ไปแล้ว');
           return;
         }
 
-        setIsVerifying(true);
-
+        // If payload is new, proceed with API call
         const formData = new FormData();
         formData.append('slip', selectedFile);
         formData.append('amount', amount);
@@ -79,8 +95,7 @@ export default function DepositPage() {
 
         if (!response.ok) {
           if (data.message === 'slip_already_used') {
-            // Add to used payloads set
-            setUsedPayloads(prev => new Set(prev).add(base64Content));
+            storePayload(base64Content);
             toast.error('สลิปถูกใช้ไปแล้ว');
             return;
           }
@@ -88,13 +103,14 @@ export default function DepositPage() {
         }
 
         if (data.status === 200) {
-          // Add to used payloads set
-          setUsedPayloads(prev => new Set(prev).add(base64Content));
+          // Store successful payload
+          storePayload(base64Content);
+          
           toast.success('ยืนยันสลิปสำเร็จ');
-          // Reset form
           setAmount('');
           setSelectedMethod(null);
           setSelectedFile(null);
+          
           // Refresh recent deposits
           const recentResponse = await fetch('/api/deposits/recent');
           if (recentResponse.ok) {
@@ -114,9 +130,6 @@ export default function DepositPage() {
       setIsVerifying(false);
     }
   };
-
-  // Rest of the component code remains the same...
-  // (Keep all the existing code below this point)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
