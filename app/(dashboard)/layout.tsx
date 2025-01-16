@@ -52,7 +52,7 @@ function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="flex flex-col gap-1">
                 <DropdownMenuItem className="cursor-pointer">
-                  <Link href="/dashboard" className="flex w-full items-center">
+                  <Link href="/dashboard/gold" className="flex w-full items-center">
                     <Image src="/dai.png" alt="Logo" width={60} height={40} className="mr-2 h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
