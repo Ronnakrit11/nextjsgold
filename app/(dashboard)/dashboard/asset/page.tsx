@@ -8,6 +8,8 @@ interface GoldAsset {
   goldType: string;
   amount: string;
   purchasePrice: string;
+  totalCost: string;
+  averageCost: string;
 }
 
 interface GoldPrice {
@@ -58,10 +60,13 @@ export default function AssetPage() {
           } else if (curr.type === 'sell') {
             const sellAmount = Number(curr.amount);
             const currentAmount = acc[goldType].amount;
-            const avgCostPerUnit = acc[goldType].totalCost / currentAmount;
-            
-            acc[goldType].amount -= sellAmount;
-            acc[goldType].totalCost = acc[goldType].amount * avgCostPerUnit;
+            if (currentAmount > 0) {
+              const avgCostPerUnit = acc[goldType].totalCost / currentAmount;
+              const sellCost = sellAmount * avgCostPerUnit;
+              
+              acc[goldType].amount -= sellAmount;
+              acc[goldType].totalCost -= sellCost;
+            }
           }
           
           return acc;
@@ -70,11 +75,16 @@ export default function AssetPage() {
         // Convert holdings to assets format, only for positive amounts
         const combinedAssets = Object.entries(holdings)
           .filter(([_, data]) => data.amount > 0.0001)
-          .map(([goldType, data]) => ({
-            goldType,
-            amount: data.amount.toString(),
-            purchasePrice: (data.totalCost / data.amount).toString()
-          }));
+          .map(([goldType, data]) => {
+            const avgCost = data.amount > 0 ? data.totalCost / data.amount : 0;
+            return {
+              goldType,
+              amount: data.amount.toString(),
+              purchasePrice: avgCost.toString(),
+              totalCost: data.totalCost.toString(),
+              averageCost: avgCost.toString()
+            };
+          });
 
         setAssets(combinedAssets);
 
@@ -198,7 +208,8 @@ export default function AssetPage() {
               {assets.map((asset, index) => {
                 const buybackPrice = getBuybackPrice(asset.goldType);
                 const currentValue = Number(asset.amount) * buybackPrice;
-                const purchaseValue = Number(asset.amount) * Number(asset.purchasePrice);
+                const purchaseValue = Number(asset.totalCost);
+                const avgCost = Number(asset.averageCost);
                 const profitLoss = currentValue - purchaseValue;
                 const profitLossPercentage = purchaseValue !== 0 ? 
                   (profitLoss / purchaseValue) * 100 : 0;
@@ -229,7 +240,7 @@ export default function AssetPage() {
                     <div className="flex justify-between text-[13px] pt-0">
                       <div>
                         <p className="text-gray-500">
-                          ต้นทุนเฉลี่ย: ฿{Number(asset.purchasePrice).toLocaleString()}
+                          ต้นทุนเฉลี่ย: ฿{avgCost.toLocaleString()}
                         </p>
                         <p className="text-gray-500">
                           ต้นทุนรวม: ฿{purchaseValue.toLocaleString()}
