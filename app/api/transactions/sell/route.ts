@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { userBalances, goldAssets, transactions } from '@/lib/db/schema';
-import { eq, and, sql, sum } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 
 export async function POST(request: Request) {
@@ -20,10 +20,16 @@ export async function POST(request: Request) {
 
     // Start a transaction
     const result = await db.transaction(async (tx) => {
-      // Calculate total gold holdings for this type
+      // Calculate total gold holdings and average cost for this type before the sale
       const [totalGold] = await tx
         .select({
-          total: sql<string>`sum(${goldAssets.amount})`
+          total: sql<string>`sum(${goldAssets.amount})`,
+          totalCost: sql<string>`sum(${goldAssets.amount} * ${goldAssets.purchasePrice})`,
+          avgCost: sql<string>`CASE 
+            WHEN sum(${goldAssets.amount}) > 0 
+            THEN sum(${goldAssets.amount} * ${goldAssets.purchasePrice}) / sum(${goldAssets.amount})
+            ELSE 0 
+          END`
         })
         .from(goldAssets)
         .where(
@@ -34,6 +40,8 @@ export async function POST(request: Request) {
         );
 
       const currentBalance = Number(totalGold?.total || 0);
+      const currentTotalCost = Number(totalGold?.totalCost || 0);
+      const currentAvgCost = Number(totalGold?.avgCost || 0);
       
       if (currentBalance < amount) {
         throw new Error(`Insufficient gold balance. You have ${currentBalance} units available.`);
@@ -94,7 +102,7 @@ export async function POST(request: Request) {
         type: 'sell',
       });
 
-      // Return updated balances
+      // Calculate new balances and costs after the sale
       const [newBalance] = await tx
         .select()
         .from(userBalances)
@@ -103,7 +111,13 @@ export async function POST(request: Request) {
 
       const [newTotalGold] = await tx
         .select({
-          total: sql<string>`sum(${goldAssets.amount})`
+          total: sql<string>`sum(${goldAssets.amount})`,
+          totalCost: sql<string>`sum(${goldAssets.amount} * ${goldAssets.purchasePrice})`,
+          avgCost: sql<string>`CASE 
+            WHEN sum(${goldAssets.amount}) > 0 
+            THEN sum(${goldAssets.amount} * ${goldAssets.purchasePrice}) / sum(${goldAssets.amount})
+            ELSE 0 
+          END`
         })
         .from(goldAssets)
         .where(
@@ -113,9 +127,17 @@ export async function POST(request: Request) {
           )
         );
 
+      const remainingAmount = Number(newTotalGold.total || 0);
+      const remainingTotalCost = Number(newTotalGold.totalCost || 0);
+      const remainingAvgCost = Number(newTotalGold.avgCost || 0);
+
       return {
         balance: newBalance.balance,
-        goldAmount: newTotalGold.total || '0'
+        goldAmount: remainingAmount.toString(),
+        averageCost: remainingAvgCost,
+        totalCost: remainingTotalCost,
+        previousAvgCost: currentAvgCost,
+        previousTotalCost: currentTotalCost
       };
     });
 

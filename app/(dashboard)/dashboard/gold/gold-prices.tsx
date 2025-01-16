@@ -38,6 +38,10 @@ interface TransactionSummary {
   price: number;
   total: number;
   isSell?: boolean;
+  averageCost: number;
+  totalCost: number;
+  previousAvgCost?: number;
+  previousTotalCost?: number;
 }
 
 export function GoldPrices() {
@@ -180,7 +184,9 @@ export function GoldPrices() {
         goldType,
         units,
         price: pricePerUnit,
-        total: moneyNum
+        total: moneyNum,
+        averageCost: data.averageCost || 0,
+        totalCost: data.totalCost || 0
       });
       
       setIsBuyDialogOpen(false);
@@ -236,7 +242,11 @@ export function GoldPrices() {
         units,
         price: pricePerUnit,
         total: totalAmount,
-        isSell: true
+        isSell: true,
+        averageCost: data.averageCost || 0,
+        totalCost: data.totalCost || 0,
+        previousAvgCost: data.previousAvgCost,
+        previousTotalCost: data.previousTotalCost
       });
 
       setIsSellDialogOpen(false);
@@ -492,6 +502,27 @@ export function GoldPrices() {
                     <span className="text-gray-600">ราคาต่อหน่วย</span>
                     <span className="font-medium">฿{transactionSummary.price.toLocaleString()}</span>
                   </div>
+
+                  {transactionSummary.isSell && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">ต้นทุนเฉลี่ยก่อนขาย</span>
+                        <span className="font-medium">฿{transactionSummary.previousAvgCost?.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">ต้นทุนรวมก่อนขาย</span>
+                        <span className="font-medium">฿{transactionSummary.previousTotalCost?.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">ต้นทุนเฉลี่ยหลังขาย</span>
+                        <span className="font-medium">฿{transactionSummary.averageCost.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">ต้นทุนรวมหลังขาย</span>
+                        <span className="font-medium">฿{transactionSummary.totalCost.toLocaleString()}</span>
+                      </div>
+                    </>
+                  )}
                   
                   <div className="border-t pt-3">
                     <div className="flex justify-between text-lg font-semibold">
