@@ -24,6 +24,7 @@ export default function DepositPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [recentDeposits, setRecentDeposits] = useState<VerifiedSlip[]>([]);
+  const [usedPayloads, setUsedPayloads] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchRecentDeposits() {
@@ -52,42 +53,60 @@ export default function DepositPage() {
     }
 
     try {
-      setIsVerifying(true);
-
-      const formData = new FormData();
-      formData.append('slip', selectedFile);
-      formData.append('amount', amount);
-
-      const response = await fetch('/api/verify-slip', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.message === 'slip_already_used') {
-          toast.error('สลิปถูกใช้ไปแล้ว');
+      // Read the file content
+      const fileReader = new FileReader();
+      fileReader.onload = async () => {
+        const base64Content = fileReader.result?.toString() || '';
+        
+        // Check if this payload has been used before
+        if (usedPayloads.has(base64Content)) {
+          toast.error('สลิปนี้ถูกใช้ไปแล้ว');
           return;
         }
-        throw new Error(data.message || 'Failed to verify slip');
-      }
 
-      if (data.status === 200) {
-        toast.success('ยืนยันสลิปสำเร็จ');
-        // Reset form
-        setAmount('');
-        setSelectedMethod(null);
-        setSelectedFile(null);
-        // Refresh recent deposits
-        const recentResponse = await fetch('/api/deposits/recent');
-        if (recentResponse.ok) {
-          const recentData = await recentResponse.json();
-          setRecentDeposits(recentData);
+        setIsVerifying(true);
+
+        const formData = new FormData();
+        formData.append('slip', selectedFile);
+        formData.append('amount', amount);
+
+        const response = await fetch('/api/verify-slip', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (data.message === 'slip_already_used') {
+            // Add to used payloads set
+            setUsedPayloads(prev => new Set(prev).add(base64Content));
+            toast.error('สลิปถูกใช้ไปแล้ว');
+            return;
+          }
+          throw new Error(data.message || 'Failed to verify slip');
         }
-      } else {
-        toast.error(data.message || 'สลิปไม่ถูกต้อง');
-      }
+
+        if (data.status === 200) {
+          // Add to used payloads set
+          setUsedPayloads(prev => new Set(prev).add(base64Content));
+          toast.success('ยืนยันสลิปสำเร็จ');
+          // Reset form
+          setAmount('');
+          setSelectedMethod(null);
+          setSelectedFile(null);
+          // Refresh recent deposits
+          const recentResponse = await fetch('/api/deposits/recent');
+          if (recentResponse.ok) {
+            const recentData = await recentResponse.json();
+            setRecentDeposits(recentData);
+          }
+        } else {
+          toast.error(data.message || 'สลิปไม่ถูกต้อง');
+        }
+      };
+
+      fileReader.readAsDataURL(selectedFile);
     } catch (error) {
       console.error('Error processing deposit:', error);
       toast.error(error instanceof Error ? error.message : 'ไม่สามารถตรวจสอบสลิปได้');
@@ -95,6 +114,9 @@ export default function DepositPage() {
       setIsVerifying(false);
     }
   };
+
+  // Rest of the component code remains the same...
+  // (Keep all the existing code below this point)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
