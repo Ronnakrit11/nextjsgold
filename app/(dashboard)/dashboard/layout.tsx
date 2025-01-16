@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -30,6 +30,7 @@ export default function DashboardLayout({
       { href: '/dashboard/asset', icon: BarChart2, label: 'Asset' },
       { href: '/dashboard/transaction', icon: FileText, label: 'Transaction' },
       { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
+      { href: '/dashboard/withdraw', icon: LogOut, label: 'Withdraw Gold' },
       { href: '/dashboard/general', icon: Settings, label: 'General' },
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
       { href: '/dashboard/security', icon: Shield, label: 'Security' },
