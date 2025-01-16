@@ -19,16 +19,6 @@ interface GoldPrice {
   diff: string | number;
 }
 
-interface Transaction {
-  id: number;
-  goldType: string;
-  amount: string;
-  pricePerUnit: string;
-  totalPrice: string;
-  type: 'buy' | 'sell';
-  createdAt: string;
-}
-
 export default function AssetPage() {
   const [balance, setBalance] = useState(0);
   const [assets, setAssets] = useState<GoldAsset[]>([]);
@@ -43,50 +33,22 @@ export default function AssetPage() {
         const balanceData = await balanceResponse.json();
         setBalance(Number(balanceData.balance));
 
-        // Fetch gold assets
-        const assetsResponse = await fetch('/api/transactions/history');
-        const transactions = (await assetsResponse.json()) as Transaction[];
+        // Fetch gold assets directly from gold_assets table
+        const assetsResponse = await fetch('/api/gold-assets');
+        const goldAssets = await assetsResponse.json();
         
-        // Process transactions to calculate current holdings
-        const holdings = transactions.reduce((acc: Record<string, { amount: number, totalCost: number }>, curr) => {
-          const goldType = curr.goldType;
-          if (!acc[goldType]) {
-            acc[goldType] = { amount: 0, totalCost: 0 };
-          }
-          
-          if (curr.type === 'buy') {
-            acc[goldType].amount += Number(curr.amount);
-            acc[goldType].totalCost += Number(curr.totalPrice);
-          } else if (curr.type === 'sell') {
-            const sellAmount = Number(curr.amount);
-            const currentAmount = acc[goldType].amount;
-            if (currentAmount > 0) {
-              const avgCostPerUnit = acc[goldType].totalCost / currentAmount;
-              const sellCost = sellAmount * avgCostPerUnit;
-              
-              acc[goldType].amount -= sellAmount;
-              acc[goldType].totalCost -= sellCost;
-            }
-          }
-          
-          return acc;
-        }, {});
+        // Convert to our asset format
+        const formattedAssets = goldAssets
+          .filter((asset: any) => Number(asset.amount) > 0.0001)
+          .map((asset: any) => ({
+            goldType: asset.goldType,
+            amount: asset.amount,
+            purchasePrice: asset.purchasePrice,
+            totalCost: (Number(asset.amount) * Number(asset.purchasePrice)).toString(),
+            averageCost: asset.purchasePrice
+          }));
 
-        // Convert holdings to assets format, only for positive amounts
-        const combinedAssets = Object.entries(holdings)
-          .filter(([_, data]) => data.amount > 0.0001)
-          .map(([goldType, data]) => {
-            const avgCost = data.amount > 0 ? data.totalCost / data.amount : 0;
-            return {
-              goldType,
-              amount: data.amount.toString(),
-              purchasePrice: avgCost.toString(),
-              totalCost: data.totalCost.toString(),
-              averageCost: avgCost.toString()
-            };
-          });
-
-        setAssets(combinedAssets);
+        setAssets(formattedAssets);
 
         // Fetch gold prices
         const pricesResponse = await fetch('/api/gold');
