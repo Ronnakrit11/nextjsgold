@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -35,6 +35,11 @@ export default function DashboardLayout({
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
       { href: '/dashboard/security', icon: Shield, label: 'Security' },
     ];
+
+    // Only add Withdrawal History for non-admin users
+    if (!isAdmin) {
+      baseItems.splice(5, 0, { href: '/dashboard/withdraw/history', icon: History, label: 'Withdraw History' });
+    }
 
     const adminItems = [
       { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },

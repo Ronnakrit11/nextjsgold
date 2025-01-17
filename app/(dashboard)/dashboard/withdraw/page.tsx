@@ -57,25 +57,25 @@ export default function WithdrawPage() {
       toast.error('Please select an asset and enter withdrawal amount');
       return;
     }
-
+  
     if (!contactDetails.name || !contactDetails.tel || !contactDetails.address) {
       toast.error('Please fill in all contact details');
       return;
     }
-
+  
     const asset = assets.find(a => a.goldType === selectedAsset);
     if (!asset) {
       toast.error('Selected asset not found');
       return;
     }
-
+  
     if (Number(withdrawAmount) > Number(asset.amount)) {
       toast.error('Withdrawal amount exceeds available balance');
       return;
     }
-
+  
     setIsSubmitting(true);
-
+  
     try {
       const response = await fetch('/api/withdraw-request', {
         method: 'POST',
@@ -88,18 +88,29 @@ export default function WithdrawPage() {
           ...contactDetails
         }),
       });
-
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        throw new Error('Failed to submit withdrawal request');
+        throw new Error(data.error || 'Failed to submit withdrawal request');
       }
-
+  
+      // Update local state with new amount
+      setAssets(prevAssets => 
+        prevAssets.map(a => 
+          a.goldType === selectedAsset 
+            ? { ...a, amount: data.remainingAmount }
+            : a
+        )
+      );
+  
       toast.success('Withdrawal request submitted successfully');
       setSelectedAsset(null);
       setWithdrawAmount('');
       setContactDetails({ name: '', tel: '', address: '' });
     } catch (error) {
       console.error('Error submitting withdrawal:', error);
-      toast.error('Failed to submit withdrawal request');
+      toast.error(error instanceof Error ? error.message : 'Failed to submit withdrawal request');
     } finally {
       setIsSubmitting(false);
     }

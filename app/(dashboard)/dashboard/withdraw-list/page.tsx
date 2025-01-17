@@ -1,11 +1,12 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldAlert, ClipboardList } from 'lucide-react';
+import { ShieldAlert, ClipboardList, Loader2 } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface WithdrawalRequest {
   id: number;
@@ -27,26 +28,51 @@ export default function WithdrawListPage() {
   const { user } = useUser();
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
   useEffect(() => {
-    async function fetchWithdrawals() {
-      try {
-        const response = await fetch('/api/withdraw-requests');
-        if (response.ok) {
-          const data = await response.json();
-          setWithdrawals(data);
-        }
-      } catch (error) {
-        console.error('Error fetching withdrawals:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (user?.role === 'admin') {
-      fetchWithdrawals();
-    }
+    fetchWithdrawals();
   }, [user]);
+
+  async function fetchWithdrawals() {
+    try {
+      const response = await fetch('/api/withdraw-requests');
+      if (response.ok) {
+        const data = await response.json();
+        setWithdrawals(data);
+      }
+    } catch (error) {
+      console.error('Error fetching withdrawals:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleStatusUpdate = async (id: number, status: 'approved' | 'rejected') => {
+    setProcessingId(id);
+    try {
+      const response = await fetch('/api/withdraw-requests/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, status }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      toast.success(`Withdrawal request ${status} successfully`);
+      // Refresh the list after update
+      await fetchWithdrawals();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Failed to update withdrawal status');
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   if (!user) {
     redirect('/sign-in');
@@ -107,6 +133,13 @@ export default function WithdrawListPage() {
                       <p className="text-sm text-gray-500">
                         {new Date(withdrawal.createdAt).toLocaleString('th-TH')}
                       </p>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${
+                        withdrawal.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        withdrawal.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {withdrawal.status.toUpperCase()}
+                      </span>
                     </div>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-md mb-4">
@@ -115,21 +148,35 @@ export default function WithdrawListPage() {
                       {withdrawal.address}
                     </p>
                   </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 border-red-600 hover:bg-red-50"
-                    >
-                      Reject
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      Approve
-                    </Button>
-                  </div>
+                  {withdrawal.status === 'pending' && (
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-600 hover:bg-red-50"
+                        onClick={() => handleStatusUpdate(withdrawal.id, 'rejected')}
+                        disabled={processingId === withdrawal.id}
+                      >
+                        {processingId === withdrawal.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Reject'
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleStatusUpdate(withdrawal.id, 'approved')}
+                        disabled={processingId === withdrawal.id}
+                      >
+                        {processingId === withdrawal.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Approve'
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
