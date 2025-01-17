@@ -37,16 +37,33 @@ export default function AssetPage() {
         const assetsResponse = await fetch('/api/gold-assets');
         const goldAssets = await assetsResponse.json();
         
-        // Convert to our asset format
-        const formattedAssets = goldAssets
-          .filter((asset: any) => Number(asset.amount) > 0.0001)
-          .map((asset: any) => ({
-            goldType: asset.goldType,
-            amount: asset.amount,
-            purchasePrice: asset.purchasePrice,
-            totalCost: (Number(asset.amount) * Number(asset.purchasePrice)).toString(),
-            averageCost: asset.purchasePrice
-          }));
+        // Combine assets of the same type and calculate weighted average purchase price
+        const combinedAssets = goldAssets.reduce((acc: { [key: string]: any }, asset: any) => {
+          const amount = Number(asset.amount);
+          if (amount <= 0.0001) return acc;
+
+          if (!acc[asset.goldType]) {
+            acc[asset.goldType] = {
+              goldType: asset.goldType,
+              amount: amount,
+              totalValue: amount * Number(asset.purchasePrice),
+              purchasePrice: Number(asset.purchasePrice)
+            };
+          } else {
+            acc[asset.goldType].amount += amount;
+            acc[asset.goldType].totalValue += amount * Number(asset.purchasePrice);
+          }
+          return acc;
+        }, {});
+
+        // Convert combined assets to array format with average purchase price
+        const formattedAssets = Object.values(combinedAssets).map((asset: any) => ({
+          goldType: asset.goldType,
+          amount: asset.amount.toString(),
+          purchasePrice: (asset.totalValue / asset.amount).toString(),
+          totalCost: asset.totalValue.toString(),
+          averageCost: (asset.totalValue / asset.amount).toString()
+        }));
 
         setAssets(formattedAssets);
 
@@ -63,6 +80,7 @@ export default function AssetPage() {
 
     fetchData();
   }, []);
+
 
   const getBuybackPrice = (goldType: string) => {
     const priceMap: Record<string, string> = {
