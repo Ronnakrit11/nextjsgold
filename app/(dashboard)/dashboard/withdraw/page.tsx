@@ -22,6 +22,11 @@ export default function WithdrawPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [contactDetails, setContactDetails] = useState({
+    name: '',
+    tel: '',
+    address: ''
+  });
 
   useEffect(() => {
     async function fetchAssets() {
@@ -49,6 +54,11 @@ export default function WithdrawPage() {
     
     if (!selectedAsset || !withdrawAmount) {
       toast.error('Please select an asset and enter withdrawal amount');
+      return;
+    }
+
+    if (!contactDetails.name || !contactDetails.tel || !contactDetails.address) {
+      toast.error('Please fill in all contact details');
       return;
     }
 
@@ -138,6 +148,42 @@ export default function WithdrawPage() {
                   }}
                   placeholder="Enter amount to withdraw"
                   className="text-lg"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={contactDetails.name}
+                  onChange={(e) => setContactDetails(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tel">Telephone</Label>
+                <Input
+                  id="tel"
+                  type="tel"
+                  value={contactDetails.tel}
+                  onChange={(e) => setContactDetails(prev => ({ ...prev, tel: e.target.value }))}
+                  placeholder="Enter your phone number"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  type="text"
+                  value={contactDetails.address}
+                  onChange={(e) => setContactDetails(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Enter your delivery address"
+                  required
                 />
               </div>
 

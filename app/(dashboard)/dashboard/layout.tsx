@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -39,6 +39,7 @@ export default function DashboardLayout({
     const adminItems = [
       { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
       { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
+      { href: '/dashboard/withdraw-list', icon: ClipboardList, label: 'Withdraw List' },
       { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting' },
       { href: '/dashboard/admin', icon: Shield, label: 'Admin Management' },
     ];
