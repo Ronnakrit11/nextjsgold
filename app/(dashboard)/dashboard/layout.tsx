@@ -26,27 +26,27 @@ export default function DashboardLayout({
     const isAdmin = user?.role === 'admin';
     
     const baseItems = [
-      { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
-      { href: '/dashboard/asset', icon: BarChart2, label: 'Asset' },
-      { href: '/dashboard/transaction', icon: FileText, label: 'Transaction' },
-      { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
-      { href: '/dashboard/withdraw', icon: LogOut, label: 'Withdraw Gold' },
-      { href: '/dashboard/general', icon: Settings, label: 'General' },
+      { href: '/dashboard/gold', icon: Coins, label: 'ซื้อขายทอง' },
+      { href: '/dashboard/asset', icon: BarChart2, label: 'สินทรัพย์ทั้งหมด' },
+      { href: '/dashboard/transaction', icon: FileText, label: 'รายการซื้อขายทอง' },
+      { href: '/dashboard/deposit', icon: Wallet, label: 'ฝากเงิน' },
+      { href: '/dashboard/withdraw', icon: LogOut, label: 'ขอรับทอง' },
+      { href: '/dashboard/general', icon: Settings, label: 'ตั้งค่า' },
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
       { href: '/dashboard/security', icon: Shield, label: 'Security' },
     ];
 
     // Only add Withdrawal History for non-admin users
     if (!isAdmin) {
-      baseItems.splice(5, 0, { href: '/dashboard/withdraw/history', icon: History, label: 'Withdraw History' });
+      baseItems.splice(5, 0, { href: '/dashboard/withdraw/history', icon: History, label: 'ประวัติการขอรับทอง' });
     }
 
     const adminItems = [
-      { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
-      { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
-      { href: '/dashboard/withdraw-list', icon: ClipboardList, label: 'Withdraw List' },
-      { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting' },
-      { href: '/dashboard/admin', icon: Shield, label: 'Admin Management' },
+      { href: '/dashboard/set-price', icon: Settings, label: 'กำหนดราคา' },
+      { href: '/dashboard/customers', icon: UserCircle, label: 'ลูกค้าทั้งหมด' },
+      { href: '/dashboard/withdraw-list', icon: ClipboardList, label: 'รายการขอรับทอง' },
+      { href: '/dashboard/website-settings', icon: Globe, label: 'จัดการเว็บไซต์' },
+      { href: '/dashboard/admin', icon: Shield, label: 'จัดการเเอดมิน' },
     ];
 
     setNavItems(isAdmin ? [...baseItems, ...adminItems] : baseItems);
