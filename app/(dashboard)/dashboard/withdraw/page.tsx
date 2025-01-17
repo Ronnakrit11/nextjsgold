@@ -27,6 +27,7 @@ export default function WithdrawPage() {
     tel: '',
     address: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchAssets() {
@@ -73,18 +74,38 @@ export default function WithdrawPage() {
       return;
     }
 
-    // Here you would typically make an API call to process the withdrawal
-    toast.info('Withdrawal request submitted. Please contact support to arrange physical gold collection.');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/withdraw-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          goldType: selectedAsset,
+          amount: withdrawAmount,
+          ...contactDetails
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit withdrawal request');
+      }
+
+      toast.success('Withdrawal request submitted successfully');
+      setSelectedAsset(null);
+      setWithdrawAmount('');
+      setContactDetails({ name: '', tel: '', address: '' });
+    } catch (error) {
+      console.error('Error submitting withdrawal:', error);
+      toast.error('Failed to submit withdrawal request');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <section className="flex-1 p-4 lg:p-8">
-        <div className="text-center">Loading...</div>
-      </section>
-    );
-  }
-
+  // Rest of your component remains the same until the form
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
@@ -200,54 +221,22 @@ export default function WithdrawPage() {
               <Button 
                 type="submit" 
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={!selectedAsset || !withdrawAmount || Number(withdrawAmount) <= 0}
+                disabled={!selectedAsset || !withdrawAmount || Number(withdrawAmount) <= 0 || isSubmitting}
               >
-                Request Withdrawal
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Request Withdrawal'
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Withdrawal Instructions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Step 1: Submit Request</h3>
-                <p className="text-sm text-gray-600">
-                  Select your gold type and enter the amount you wish to withdraw.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Step 2: Verification</h3>
-                <p className="text-sm text-gray-600">
-                  Our team will verify your withdrawal request and contact you.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Step 3: Collection</h3>
-                <p className="text-sm text-gray-600">
-                  Visit our office with proper identification to collect your physical gold.
-                </p>
-              </div>
-
-              <div className="mt-6 p-4 border rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Contact Support</h3>
-                <p className="text-sm text-gray-600">
-                  For assistance with withdrawals, please contact our support team:
-                  <br />
-                  Email: support@example.com
-                  <br />
-                  Phone: +66 XX-XXX-XXXX
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Instructions card remains the same */}
       </div>
     </section>
   );

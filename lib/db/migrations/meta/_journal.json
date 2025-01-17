@@ -36,6 +36,13 @@
       "when": 1736865429299,
       "tag": "0004_round_tyrannus",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1737087256374,
+      "tag": "0005_easy_slayback",
+      "breakpoints": true
     }
   ]
 }
