@@ -16,6 +16,16 @@ interface GoldAsset {
   purchasePrice: string;
 }
 
+interface RawGoldAsset {
+  goldType: string;
+  amount: string;
+  purchasePrice: string;
+  userId: number;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function WithdrawPage() {
   const { user } = useUser();
   const [assets, setAssets] = useState<GoldAsset[]>([]);
@@ -34,8 +44,31 @@ export default function WithdrawPage() {
       try {
         const response = await fetch('/api/gold-assets');
         if (response.ok) {
-          const data = await response.json();
-          setAssets(data.filter((asset: GoldAsset) => Number(asset.amount) > 0));
+          const goldAssets = (await response.json()) as RawGoldAsset[];
+          
+          // Combine assets of the same type
+          const combinedAssets = goldAssets.reduce<Record<string, GoldAsset>>((acc, asset) => {
+            const amount = Number(asset.amount);
+            if (amount <= 0) return acc;
+            
+            if (!acc[asset.goldType]) {
+              acc[asset.goldType] = {
+                goldType: asset.goldType,
+                amount: amount.toString(),
+                purchasePrice: asset.purchasePrice
+              };
+            } else {
+              acc[asset.goldType].amount = (Number(acc[asset.goldType].amount) + amount).toString();
+            }
+            return acc;
+          }, {});
+
+          // Convert to array and filter out zero amounts
+          const assetsArray = Object.values(combinedAssets).filter(
+            (asset): asset is GoldAsset => Number(asset.amount) > 0
+          );
+          
+          setAssets(assetsArray);
         }
       } catch (error) {
         console.error('Error fetching assets:', error);
@@ -116,7 +149,6 @@ export default function WithdrawPage() {
     }
   };
 
-  // Rest of your component remains the same until the form
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
@@ -246,8 +278,6 @@ export default function WithdrawPage() {
             </form>
           </CardContent>
         </Card>
-
-        {/* Instructions card remains the same */}
       </div>
     </section>
   );
