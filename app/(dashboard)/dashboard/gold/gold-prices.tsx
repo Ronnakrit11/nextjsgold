@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface GoldPrice {
   name: string;
@@ -57,6 +58,7 @@ export function GoldPrices() {
   const [sellUnits, setSellUnits] = useState('');
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [transactionSummary, setTransactionSummary] = useState<TransactionSummary | null>(null);
+  const [isBuyProcessing, setIsBuyProcessing] = useState(false);
 
   async function fetchData() {
     try {
@@ -136,6 +138,8 @@ export function GoldPrices() {
       return;
     }
 
+    setIsBuyProcessing(true);
+
     try {
       const pricePerUnit = typeof selectedPrice.ask === 'string' ? 
         parseFloat(selectedPrice.ask) : selectedPrice.ask;
@@ -180,8 +184,11 @@ export function GoldPrices() {
       toast.success('ซื้อทองสำเร็จ');
     } catch (error) {
       toast.error('เกิดข้อผิดพลาดในการซื้อทอง');
+    } finally {
+      setIsBuyProcessing(false);
     }
   };
+
 
   const handleSellSubmit = async () => {
     if (!selectedPrice || !sellUnits) return;
@@ -341,45 +348,53 @@ export function GoldPrices() {
         );
       })}
 
-      {/* Buy Dialog */}
-      <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>ซื้อทอง</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>จำนวนเงิน</Label>
-              <Input
-                type="number"
-                value={moneyAmount}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || Number(value) <= balance) {
-                    setMoneyAmount(value);
-                  }
-                }}
-                placeholder="ระบุจำนวนเงินที่ต้องการซื้อ"
-              />
-            </div>
-            {moneyAmount && selectedPrice && (
-              <div className="space-y-2">
-                <Label>จำนวนทอง</Label>
-                <p className="text-lg font-semibold">
-                  {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} หน่วย
-                </p>
-              </div>
-            )}
-            <Button
-              onClick={handleBuySubmit}
-              className="w-full bg-green-500 hover:bg-green-600 text-white"
-              disabled={!moneyAmount || Number(moneyAmount) <= 0 || Number(moneyAmount) > balance}
-            >
-              ยืนยันการซื้อ
-            </Button>
+       {/* Buy Dialog */}
+  <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>ซื้อทอง</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4 py-4">
+        <div className="space-y-2">
+          <Label>จำนวนเงิน</Label>
+          <Input
+            type="number"
+            value={moneyAmount}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '' || Number(value) <= balance) {
+                setMoneyAmount(value);
+              }
+            }}
+            placeholder="ระบุจำนวนเงินที่ต้องการซื้อ"
+          />
+        </div>
+        {moneyAmount && selectedPrice && (
+          <div className="space-y-2">
+            <Label>จำนวนทอง</Label>
+            <p className="text-lg font-semibold">
+              {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} หน่วย
+            </p>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+        <Button
+          onClick={handleBuySubmit}
+          className="w-full bg-green-500 hover:bg-green-600 text-white"
+          disabled={!moneyAmount || Number(moneyAmount) <= 0 || Number(moneyAmount) > balance || isBuyProcessing}
+        >
+          {isBuyProcessing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              กำลังทำรายการ...
+            </>
+          ) : (
+            'ยืนยันคำสั่งซื้อ'
+          )}
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+
 
       {/* Sell Dialog */}
       <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
