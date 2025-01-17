@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart2, Wallet, PieChart } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { AssetSkeleton } from '@/components/AssetSkeleton';
 
 interface GoldAsset {
   goldType: string;
@@ -81,7 +82,6 @@ export default function AssetPage() {
     fetchData();
   }, []);
 
-
   const getBuybackPrice = (goldType: string) => {
     const priceMap: Record<string, string> = {
       'ทองสมาคม': 'สมาคมฯ',
@@ -104,11 +104,7 @@ export default function AssetPage() {
   const totalAccountValue = totalAssetValue + balance;
 
   if (loading) {
-    return (
-      <section className="flex-1 p-4 lg:p-8">
-        <div className="text-center">Loading...</div>
-      </section>
-    );
+    return <AssetSkeleton />;
   }
 
   return (
