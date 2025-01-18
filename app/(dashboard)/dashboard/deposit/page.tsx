@@ -36,6 +36,7 @@ export default function DepositPage() {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [recentDeposits, setRecentDeposits] = useState<VerifiedSlip[]>([]);
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function DepositPage() {
 
     try {
       setIsVerifying(true);
+      setIsProcessing(true);
 
       // Read file as base64
       const fileReader = new FileReader();
@@ -77,6 +79,7 @@ export default function DepositPage() {
         // Check if payload already exists
         if (usedPayloads.includes(base64Content)) {
           setIsVerifying(false);
+          setIsProcessing(false);
           toast.error('สลิปถูกใช้ไปแล้ว');
           return;
         }
@@ -128,6 +131,7 @@ export default function DepositPage() {
       toast.error(error instanceof Error ? error.message : 'ไม่สามารถตรวจสอบสลิปได้');
     } finally {
       setIsVerifying(false);
+      setIsProcessing(false);
     }
   };
 
@@ -257,12 +261,12 @@ export default function DepositPage() {
               <Button 
                 type="submit" 
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={!amount || !selectedMethod || !selectedFile || isVerifying}
+                disabled={!amount || !selectedMethod || !selectedFile || isVerifying || isProcessing}
               >
-                {isVerifying ? (
+                {isProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
+                    Processing Deposit...
                   </>
                 ) : (
                   'Proceed with Deposit'
