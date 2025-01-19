@@ -33,7 +33,7 @@ export default function DashboardLayout({
       { href: '/dashboard/withdraw', icon: LogOut, label: 'ขอรับทอง' },
       { href: '/dashboard/general', icon: Settings, label: 'ตั้งค่า' },
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-      { href: '/dashboard/security', icon: Shield, label: 'Security' },
+      { href: '/dashboard/security', icon: Shield, label: 'เปลี่ยนรหัสผ่าน' },
     ];
 
     // Only add Withdrawal History for non-admin users
