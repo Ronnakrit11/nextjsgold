@@ -15,6 +15,7 @@ import {
   type NewActivityLog,
   ActivityType,
   invitations,
+  bankAccounts,
 } from '@/lib/db/schema';
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
@@ -441,5 +442,48 @@ export const inviteTeamMember = validatedActionWithUser(
     );
 
     return { success: 'Invitation sent successfully' };
+  }
+);
+
+const updateBankAccountSchema = z.object({
+  bank: z.string().min(1, 'Bank is required'),
+  bankAccountNo: z.string().min(1, 'Bank account number is required'),
+  bankAccountName: z.string().min(1, 'Bank account name is required'),
+});
+
+export const updateBankAccount = validatedActionWithUser(
+  updateBankAccountSchema,
+  async (data, _, user) => {
+    const { bank, bankAccountNo, bankAccountName } = data;
+
+    // Check if user already has a bank account
+    const existingAccount = await db
+      .select()
+      .from(bankAccounts)
+      .where(eq(bankAccounts.userId, user.id))
+      .limit(1);
+
+    if (existingAccount.length > 0) {
+      // Update existing bank account
+      await db
+        .update(bankAccounts)
+        .set({
+          bank,
+          accountNumber: bankAccountNo,
+          accountName: bankAccountName,
+          updatedAt: new Date(),
+        })
+        .where(eq(bankAccounts.userId, user.id));
+    } else {
+      // Create new bank account
+      await db.insert(bankAccounts).values({
+        userId: user.id,
+        bank,
+        accountNumber: bankAccountNo,
+        accountName: bankAccountName,
+      });
+    }
+
+    return { success: 'Bank account updated successfully.' };
   }
 );

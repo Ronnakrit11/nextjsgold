@@ -50,6 +50,13 @@
       "when": 1737273767877,
       "tag": "0006_worthless_reavers",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1737294436756,
+      "tag": "0007_dark_hammerhead",
+      "breakpoints": true
     }
   ]
 }
