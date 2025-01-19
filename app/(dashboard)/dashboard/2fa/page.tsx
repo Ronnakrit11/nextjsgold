@@ -42,7 +42,7 @@ export default function TwoFactorAuthPage() {
       // Create otpauth URL manually to ensure proper encoding
       const otpauthUrl = `otpauth://totp/Gold%20Trading%20System:${encodeURIComponent(user?.email || '')}?secret=${data.secret}&issuer=Gold%20Trading%20System&algorithm=SHA1&digits=6&period=30`;
       
-      // Generate QR code URL using Google Charts API
+      // Generate QR code URL usding Google Charts API
       //const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(otpauthUrl)}`;
       //setQrCodeUrl(qrUrl);
       setShowQRCode(true);
