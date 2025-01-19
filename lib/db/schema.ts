@@ -321,3 +321,31 @@ export const bankAccountsRelations = relations(bankAccounts, ({ one }) => ({
 // Add to your existing types
 export type BankAccount = typeof bankAccounts.$inferSelect;
 export type NewBankAccount = typeof bankAccounts.$inferInsert;
+
+// Add to your existing schema.ts file
+
+export const withdrawalMoneyRequests = pgTable('withdrawal_money_requests', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id),
+  amount: decimal('amount').notNull(),
+  bank: varchar('bank', { length: 50 }).notNull(),
+  accountNumber: varchar('account_number', { length: 20 }).notNull(),
+  accountName: varchar('account_name', { length: 100 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Add to your existing relations
+export const withdrawalMoneyRequestsRelations = relations(withdrawalMoneyRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [withdrawalMoneyRequests.userId],
+    references: [users.id],
+  }),
+}));
+
+// Add to your existing types
+export type WithdrawalMoneyRequest = typeof withdrawalMoneyRequests.$inferSelect;
+export type NewWithdrawalMoneyRequest = typeof withdrawalMoneyRequests.$inferInsert;

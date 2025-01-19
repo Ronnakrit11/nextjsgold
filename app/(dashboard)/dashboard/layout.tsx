@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -30,27 +30,34 @@ export default function DashboardLayout({
       { href: '/dashboard/asset', icon: BarChart2, label: 'สินทรัพย์ทั้งหมด' },
       { href: '/dashboard/transaction', icon: FileText, label: 'รายการซื้อขายทอง' },
       { href: '/dashboard/deposit', icon: Wallet, label: 'ฝากเงิน' },
+      { href: '/dashboard/withdraw-money', icon: CreditCard, label: 'ถอนเงิน' },
       { href: '/dashboard/withdraw', icon: LogOut, label: 'ขอรับทอง' },
+      { href: '/dashboard/withdraw/history', icon: History, label: 'ประวัติการขอรับทอง' },
+      { href: '/dashboard/withdraw-money/history', icon: History, label: 'ประวัติการขอถอนเงิน' },
       { href: '/dashboard/general', icon: Settings, label: 'ตั้งค่า' },
       { href: '/dashboard/security', icon: Shield, label: 'เปลี่ยนรหัสผ่าน' },
       { href: '/dashboard/2fa', icon: Key, label: 'ตั้งค่า 2FA' },
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
     ];
 
-    // Only add Withdrawal History for non-admin users
-    if (!isAdmin) {
-      baseItems.splice(5, 0, { href: '/dashboard/withdraw/history', icon: History, label: 'ประวัติการขอรับทอง' });
-    }
-
     const adminItems = [
       { href: '/dashboard/set-price', icon: Settings, label: 'กำหนดราคา' },
       { href: '/dashboard/customers', icon: UserCircle, label: 'ลูกค้าทั้งหมด' },
+      { href: '/dashboard/withdraw-money-requests', icon: BanknoteIcon, label: 'รายการขอถอนเงิน' },
       { href: '/dashboard/withdraw-list', icon: ClipboardList, label: 'รายการขอรับทอง' },
       { href: '/dashboard/website-settings', icon: Globe, label: 'จัดการเว็บไซต์' },
       { href: '/dashboard/admin', icon: Shield, label: 'จัดการเเอดมิน' },
     ];
 
-    setNavItems(isAdmin ? [...baseItems, ...adminItems] : baseItems);
+    // If admin, remove the history menus and add admin items
+    if (isAdmin) {
+      const filteredBaseItems = baseItems.filter(item => 
+        !item.href.includes('/history')
+      );
+      setNavItems([...filteredBaseItems, ...adminItems]);
+    } else {
+      setNavItems(baseItems);
+    }
   }, [user]);
 
   return (
