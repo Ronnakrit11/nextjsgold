@@ -24,6 +24,7 @@ import { getUser, getUserWithTeam } from '@/lib/db/queries';
 import {
   validatedAction,
   validatedActionWithUser,
+  ActionState,
 } from '@/lib/auth/middleware';
 import { authenticator } from 'otplib';
 
@@ -53,7 +54,7 @@ const signInSchema = z.object({
   twoFactorCode: z.string().optional(),
 });
 
-export const signIn = validatedAction(signInSchema, async (data, formData) => {
+export const signIn = validatedAction(signInSchema, async (data, formData): Promise<ActionState> => {
   const { email, password, twoFactorCode } = data;
 
   const userWithTeam = await db
@@ -108,12 +109,12 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const redirectTo = formData.get('redirect') as string | null;
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
-    return createCheckoutSession({ team: foundTeam, priceId });
+    await createCheckoutSession({ team: foundTeam, priceId });
   }
 
   redirect('/dashboard/gold');
+  return {}; // TypeScript needs this even though redirect() throws
 });
-
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -121,7 +122,7 @@ const signUpSchema = z.object({
   inviteId: z.string().optional(),
 });
 
-export const signUp = validatedAction(signUpSchema, async (data, formData) => {
+export const signUp = validatedAction(signUpSchema, async (data, formData): Promise<ActionState> => {
   const { email, password, inviteId } = data;
 
   const existingUser = await db
@@ -218,10 +219,11 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const redirectTo = formData.get('redirect') as string | null;
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
-    return createCheckoutSession({ team: createdTeam, priceId });
+    await createCheckoutSession({ team: createdTeam, priceId });
   }
 
   redirect('/dashboard/gold');
+  return {}; // TypeScript needs this even though redirect() throws
 });
 
 export async function signOut() {
@@ -321,6 +323,7 @@ export const deleteAccount = validatedActionWithUser(
 
     (await cookies()).delete('session');
     redirect('/sign-in');
+    return {}; // TypeScript needs this even though redirect() throws
   }
 );
 
