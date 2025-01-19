@@ -25,6 +25,7 @@ import {
   validatedAction,
   validatedActionWithUser,
 } from '@/lib/auth/middleware';
+import { authenticator } from 'otplib';
 
 const ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
 
@@ -49,10 +50,11 @@ async function logActivity(
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
   password: z.string().min(8).max(100),
+  twoFactorCode: z.string().optional(),
 });
 
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
-  const { email, password } = data;
+  const { email, password, twoFactorCode } = data;
 
   const userWithTeam = await db
     .select({
@@ -80,6 +82,24 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     return { error: 'Invalid email or password. Please try again.' };
   }
 
+  // Check if 2FA is enabled
+  if (foundUser.twoFactorEnabled) {
+    // If 2FA code is not provided, return flag to show 2FA input
+    if (!twoFactorCode) {
+      return { requires2FA: true };
+    }
+
+    // Verify 2FA code
+    const isValid = authenticator.verify({
+      token: twoFactorCode,
+      secret: foundUser.twoFactorSecret || ''
+    });
+
+    if (!isValid) {
+      return { error: 'Invalid 2FA code. Please try again.' };
+    }
+  }
+
   await Promise.all([
     setSession(foundUser),
     logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN),
@@ -93,6 +113,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 
   redirect('/dashboard/gold');
 });
+
 
 const signUpSchema = z.object({
   email: z.string().email(),

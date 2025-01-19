@@ -6,6 +6,7 @@ import {
   timestamp,
   integer,
   decimal,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -14,7 +15,9 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 100 }),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
-  role: varchar('role', { length: 20 }).notNull().default('member'), // Can be 'member', 'admin', or 'owner'
+  role: varchar('role', { length: 20 }).notNull().default('member'),
+  twoFactorSecret: text('two_factor_secret'),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),

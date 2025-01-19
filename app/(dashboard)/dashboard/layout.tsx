@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -32,8 +32,9 @@ export default function DashboardLayout({
       { href: '/dashboard/deposit', icon: Wallet, label: 'ฝากเงิน' },
       { href: '/dashboard/withdraw', icon: LogOut, label: 'ขอรับทอง' },
       { href: '/dashboard/general', icon: Settings, label: 'ตั้งค่า' },
-      { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
       { href: '/dashboard/security', icon: Shield, label: 'เปลี่ยนรหัสผ่าน' },
+      { href: '/dashboard/2fa', icon: Key, label: 'ตั้งค่า 2FA' },
+      { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
     ];
 
     // Only add Withdrawal History for non-admin users

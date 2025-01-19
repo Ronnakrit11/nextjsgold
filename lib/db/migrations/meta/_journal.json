@@ -43,6 +43,13 @@
       "when": 1737087256374,
       "tag": "0005_easy_slayback",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1737273767877,
+      "tag": "0006_worthless_reavers",
+      "breakpoints": true
     }
   ]
 }

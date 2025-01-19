@@ -24,7 +24,18 @@ export async function getUser() {
   }
 
   const user = await db
-    .select()
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      passwordHash: users.passwordHash,
+      role: users.role,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      deletedAt: users.deletedAt,
+      twoFactorSecret: users.twoFactorSecret,
+      twoFactorEnabled: users.twoFactorEnabled,
+    })
     .from(users)
     .where(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)))
     .limit(1);
@@ -35,6 +46,8 @@ export async function getUser() {
 
   return user[0];
 }
+
+// Rest of the file remains unchanged...
 
 export async function getTeamByStripeCustomerId(customerId: string) {
   const result = await db

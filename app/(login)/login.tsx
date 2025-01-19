@@ -9,16 +9,45 @@ import { Label } from '@/components/ui/label';
 import { CircleIcon, Loader2 } from 'lucide-react';
 import { signIn, signUp } from './actions';
 import { ActionState } from '@/lib/auth/middleware';
+import { useState, useEffect, startTransition } from 'react';
 
 export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
   const priceId = searchParams.get('priceId');
   const inviteId = searchParams.get('inviteId');
-  const [state, formAction, pending] = useActionState<ActionState, FormData>(
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
     mode === 'signin' ? signIn : signUp,
     { error: '' }
   );
+
+  useEffect(() => {
+    if (state?.requires2FA) {
+      setShowTwoFactor(true);
+    }
+  }, [state]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('password', password);
+    if (showTwoFactor) {
+      formData.append('twoFactorCode', twoFactorCode);
+    }
+    if (redirect) formData.append('redirect', redirect);
+    if (priceId) formData.append('priceId', priceId);
+    if (inviteId) formData.append('inviteId', inviteId);
+    
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
 
   return (
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
@@ -34,54 +63,78 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <form className="space-y-6" action={formAction}>
-          <input type="hidden" name="redirect" value={redirect || ''} />
-          <input type="hidden" name="priceId" value={priceId || ''} />
-          <input type="hidden" name="inviteId" value={inviteId || ''} />
-          <div>
-            <Label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email
-            </Label>
-            <div className="mt-1">
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                maxLength={50}
-                className="appearance-none rounded-full relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your email"
-              />
-            </div>
-          </div>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {!showTwoFactor ? (
+            <>
+              <div>
+                <Label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email
+                </Label>
+                <div className="mt-1">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                    maxLength={50}
+                    className="appearance-none rounded-full relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                    placeholder="Enter your email"
+                  />
+                </div>
+              </div>
 
-          <div>
-            <Label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </Label>
-            <div className="mt-1">
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete={
-                  mode === 'signin' ? 'current-password' : 'new-password'
-                }
-                required
-                minLength={8}
-                maxLength={100}
-                className="appearance-none rounded-full relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your password"
-              />
+              <div>
+                <Label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password
+                </Label>
+                <div className="mt-1">
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={
+                      mode === 'signin' ? 'current-password' : 'new-password'
+                    }
+                    required
+                    minLength={8}
+                    maxLength={100}
+                    className="appearance-none rounded-full relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                    placeholder="Enter your password"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div>
+              <Label
+                htmlFor="twoFactorCode"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Two-Factor Authentication Code
+              </Label>
+              <div className="mt-1">
+                <Input
+                  id="twoFactorCode"
+                  type="text"
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  required
+                  maxLength={6}
+                  className="appearance-none rounded-full relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                  placeholder="Enter 6-digit code"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {state?.error && (
             <div className="text-red-500 text-sm">{state.error}</div>
@@ -91,13 +144,15 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             <Button
               type="submit"
               className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              disabled={pending}
+              disabled={isPending}
             >
-              {pending ? (
+              {isPending ? (
                 <>
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                   Loading...
                 </>
+              ) : showTwoFactor ? (
+                'Verify Code'
               ) : mode === 'signin' ? (
                 'Sign in'
               ) : (
