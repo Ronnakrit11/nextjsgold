@@ -259,19 +259,20 @@ export default function DepositPage() {
               </div>
 
               <Button 
-                type="submit" 
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={!amount || !selectedMethod || !selectedFile || isVerifying || isProcessing}
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing Deposit...
-                  </>
-                ) : (
-                  'Proceed with Deposit'
-                )}
-              </Button>
+  type="submit" 
+  className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+  disabled={!amount || !selectedMethod || !selectedFile || isVerifying || isProcessing}
+>
+  {isProcessing ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Proceed with Deposit...
+    </>
+  ) : (
+    'Proceed with Deposit'
+  )}
+</Button>
+
             </form>
           </CardContent>
         </Card>
