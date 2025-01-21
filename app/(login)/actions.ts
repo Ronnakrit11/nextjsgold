@@ -15,7 +15,6 @@ import {
   type NewActivityLog,
   ActivityType,
   invitations,
-  bankAccounts,
 } from '@/lib/db/schema';
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
@@ -25,9 +24,7 @@ import { getUser, getUserWithTeam } from '@/lib/db/queries';
 import {
   validatedAction,
   validatedActionWithUser,
-  ActionState,
 } from '@/lib/auth/middleware';
-import { authenticator } from 'otplib';
 
 const ADMIN_EMAIL = 'ronnakritnook1@gmail.com';
 
@@ -52,11 +49,10 @@ async function logActivity(
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
   password: z.string().min(8).max(100),
-  twoFactorCode: z.string().optional(),
 });
 
-export const signIn = validatedAction(signInSchema, async (data, formData): Promise<ActionState> => {
-  const { email, password, twoFactorCode } = data;
+export const signIn = validatedAction(signInSchema, async (data, formData) => {
+  const { email, password } = data;
 
   const userWithTeam = await db
     .select({
@@ -84,24 +80,6 @@ export const signIn = validatedAction(signInSchema, async (data, formData): Prom
     return { error: 'Invalid email or password. Please try again.' };
   }
 
-  // Check if 2FA is enabled
-  if (foundUser.twoFactorEnabled) {
-    // If 2FA code is not provided, return flag to show 2FA input
-    if (!twoFactorCode) {
-      return { requires2FA: true };
-    }
-
-    // Verify 2FA code
-    const isValid = authenticator.verify({
-      token: twoFactorCode,
-      secret: foundUser.twoFactorSecret || ''
-    });
-
-    if (!isValid) {
-      return { error: 'Invalid 2FA code. Please try again.' };
-    }
-  }
-
   await Promise.all([
     setSession(foundUser),
     logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN),
@@ -110,11 +88,10 @@ export const signIn = validatedAction(signInSchema, async (data, formData): Prom
   const redirectTo = formData.get('redirect') as string | null;
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
-    await createCheckoutSession({ team: foundTeam, priceId });
+    return createCheckoutSession({ team: foundTeam, priceId });
   }
 
   redirect('/dashboard/gold');
-  return {}; // TypeScript needs this even though redirect() throws
 });
 
 const signUpSchema = z.object({
@@ -123,7 +100,7 @@ const signUpSchema = z.object({
   inviteId: z.string().optional(),
 });
 
-export const signUp = validatedAction(signUpSchema, async (data, formData): Promise<ActionState> => {
+export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { email, password, inviteId } = data;
 
   const existingUser = await db
@@ -220,11 +197,10 @@ export const signUp = validatedAction(signUpSchema, async (data, formData): Prom
   const redirectTo = formData.get('redirect') as string | null;
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
-    await createCheckoutSession({ team: createdTeam, priceId });
+    return createCheckoutSession({ team: createdTeam, priceId });
   }
 
   redirect('/dashboard/gold');
-  return {}; // TypeScript needs this even though redirect() throws
 });
 
 export async function signOut() {
@@ -324,7 +300,6 @@ export const deleteAccount = validatedActionWithUser(
 
     (await cookies()).delete('session');
     redirect('/sign-in');
-    return {}; // TypeScript needs this even though redirect() throws
   }
 );
 
@@ -442,48 +417,5 @@ export const inviteTeamMember = validatedActionWithUser(
     );
 
     return { success: 'Invitation sent successfully' };
-  }
-);
-
-const updateBankAccountSchema = z.object({
-  bank: z.string().min(1, 'Bank is required'),
-  bankAccountNo: z.string().min(1, 'Bank account number is required'),
-  bankAccountName: z.string().min(1, 'Bank account name is required'),
-});
-
-export const updateBankAccount = validatedActionWithUser(
-  updateBankAccountSchema,
-  async (data, _, user) => {
-    const { bank, bankAccountNo, bankAccountName } = data;
-
-    // Check if user already has a bank account
-    const existingAccount = await db
-      .select()
-      .from(bankAccounts)
-      .where(eq(bankAccounts.userId, user.id))
-      .limit(1);
-
-    if (existingAccount.length > 0) {
-      // Update existing bank account
-      await db
-        .update(bankAccounts)
-        .set({
-          bank,
-          accountNumber: bankAccountNo,
-          accountName: bankAccountName,
-          updatedAt: new Date(),
-        })
-        .where(eq(bankAccounts.userId, user.id));
-    } else {
-      // Create new bank account
-      await db.insert(bankAccounts).values({
-        userId: user.id,
-        bank,
-        accountNumber: bankAccountNo,
-        accountName: bankAccountName,
-      });
-    }
-
-    return { success: 'Bank account updated successfully.' };
   }
 );

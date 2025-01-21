@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart2, Wallet, PieChart } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { AssetSkeleton } from '@/components/AssetSkeleton';
 
 interface GoldAsset {
   goldType: string;
@@ -38,48 +37,23 @@ export default function AssetPage() {
         const assetsResponse = await fetch('/api/gold-assets');
         const goldAssets = await assetsResponse.json();
         
-        // Combine assets of the same type and calculate weighted average purchase price
-        const combinedAssets = goldAssets.reduce((acc: { [key: string]: any }, asset: any) => {
-          const amount = Number(asset.amount);
-          if (amount <= 0.0001) return acc;
-
-          if (!acc[asset.goldType]) {
-            acc[asset.goldType] = {
-              goldType: asset.goldType,
-              amount: amount,
-              totalValue: amount * Number(asset.purchasePrice),
-              purchasePrice: Number(asset.purchasePrice)
-            };
-          } else {
-            acc[asset.goldType].amount += amount;
-            acc[asset.goldType].totalValue += amount * Number(asset.purchasePrice);
-          }
-          return acc;
-        }, {});
-
-        // Convert combined assets to array format with average purchase price
-        const formattedAssets = Object.values(combinedAssets).map((asset: any) => ({
-          goldType: asset.goldType,
-          amount: asset.amount.toString(),
-          purchasePrice: (asset.totalValue / asset.amount).toString(),
-          totalCost: asset.totalValue.toString(),
-          averageCost: (asset.totalValue / asset.amount).toString()
-        }));
+        // Convert to our asset format
+        const formattedAssets = goldAssets
+          .filter((asset: any) => Number(asset.amount) > 0.0001)
+          .map((asset: any) => ({
+            goldType: asset.goldType,
+            amount: asset.amount,
+            purchasePrice: asset.purchasePrice,
+            totalCost: (Number(asset.amount) * Number(asset.purchasePrice)).toString(),
+            averageCost: asset.purchasePrice
+          }));
 
         setAssets(formattedAssets);
 
         // Fetch gold prices
         const pricesResponse = await fetch('/api/gold');
-        if (pricesResponse.ok) {
-          const text = await pricesResponse.text(); // Get response as text first
-          try {
-            const pricesData = JSON.parse(text); // Then parse it as JSON
-            setPrices(pricesData);
-          } catch (parseError) {
-            console.error('Error parsing gold prices:', parseError);
-            console.log('Raw response:', text); // Log the raw response for debugging
-          }
-        }
+        const pricesData = await pricesResponse.json();
+        setPrices(pricesData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -112,7 +86,11 @@ export default function AssetPage() {
   const totalAccountValue = totalAssetValue + balance;
 
   if (loading) {
-    return <AssetSkeleton />;
+    return (
+      <section className="flex-1 p-4 lg:p-8">
+        <div className="text-center">Loading...</div>
+      </section>
+    );
   }
 
   return (

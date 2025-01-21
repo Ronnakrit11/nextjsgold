@@ -6,7 +6,6 @@ import {
   timestamp,
   integer,
   decimal,
-  boolean,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -15,9 +14,7 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 100 }),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
-  role: varchar('role', { length: 20 }).notNull().default('member'),
-  twoFactorSecret: text('two_factor_secret'),
-  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  role: varchar('role', { length: 20 }).notNull().default('member'), // Can be 'member', 'admin', or 'owner'
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   deletedAt: timestamp('deleted_at'),
@@ -265,87 +262,3 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 // Add to your existing types
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
-
-// Add this to your existing schema.ts file, with the other table definitions
-
-export const withdrawalRequests = pgTable('withdrawal_requests', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id')
-    .notNull()
-    .references(() => users.id),
-  goldType: varchar('gold_type', { length: 50 }).notNull(),
-  amount: decimal('amount').notNull(),
-  name: varchar('name', { length: 100 }).notNull(),
-  tel: varchar('tel', { length: 20 }).notNull(),
-  address: text('address').notNull(),
-  status: varchar('status', { length: 20 }).notNull().default('pending'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-// Add to your existing relations
-export const withdrawalRequestsRelations = relations(withdrawalRequests, ({ one }) => ({
-  user: one(users, {
-    fields: [withdrawalRequests.userId],
-    references: [users.id],
-  }),
-}));
-
-// Add to your existing types
-export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
-export type NewWithdrawalRequest = typeof withdrawalRequests.$inferInsert;
-
-
-// Add this to your existing schema.ts file, with the other table definitions
-
-export const bankAccounts = pgTable('bank_accounts', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id')
-    .notNull()
-    .references(() => users.id),
-  bank: varchar('bank', { length: 50 }).notNull(),
-  accountNumber: varchar('account_number', { length: 20 }).notNull(),
-  accountName: varchar('account_name', { length: 100 }).notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-// Add to your existing relations
-export const bankAccountsRelations = relations(bankAccounts, ({ one }) => ({
-  user: one(users, {
-    fields: [bankAccounts.userId],
-    references: [users.id],
-  }),
-}));
-
-// Add to your existing types
-export type BankAccount = typeof bankAccounts.$inferSelect;
-export type NewBankAccount = typeof bankAccounts.$inferInsert;
-
-// Add to your existing schema.ts file
-
-export const withdrawalMoneyRequests = pgTable('withdrawal_money_requests', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id')
-    .notNull()
-    .references(() => users.id),
-  amount: decimal('amount').notNull(),
-  bank: varchar('bank', { length: 50 }).notNull(),
-  accountNumber: varchar('account_number', { length: 20 }).notNull(),
-  accountName: varchar('account_name', { length: 100 }).notNull(),
-  status: varchar('status', { length: 20 }).notNull().default('pending'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-// Add to your existing relations
-export const withdrawalMoneyRequestsRelations = relations(withdrawalMoneyRequests, ({ one }) => ({
-  user: one(users, {
-    fields: [withdrawalMoneyRequests.userId],
-    references: [users.id],
-  }),
-}));
-
-// Add to your existing types
-export type WithdrawalMoneyRequest = typeof withdrawalMoneyRequests.$inferSelect;
-export type NewWithdrawalMoneyRequest = typeof withdrawalMoneyRequests.$inferInsert;

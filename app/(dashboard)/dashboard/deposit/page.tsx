@@ -17,26 +17,12 @@ interface VerifiedSlip {
   status: 'completed' | 'pending';
 }
 
-// Store used payloads in localStorage
-const getStoredPayloads = (): string[] => {
-  if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('usedPayloads');
-  return stored ? JSON.parse(stored) : [];
-};
-
-const storePayload = (payload: string) => {
-  const payloads = getStoredPayloads();
-  payloads.push(payload);
-  localStorage.setItem('usedPayloads', JSON.stringify(payloads));
-};
-
 export default function DepositPage() {
   const { user } = useUser();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [recentDeposits, setRecentDeposits] = useState<VerifiedSlip[]>([]);
 
   useEffect(() => {
@@ -67,71 +53,46 @@ export default function DepositPage() {
 
     try {
       setIsVerifying(true);
-      setIsProcessing(true);
 
-      // Read file as base64
-      const fileReader = new FileReader();
-      
-      fileReader.onload = async () => {
-        const base64Content = fileReader.result?.toString() || '';
-        const usedPayloads = getStoredPayloads();
+      const formData = new FormData();
+      formData.append('slip', selectedFile);
+      formData.append('amount', amount);
 
-        // Check if payload already exists
-        if (usedPayloads.includes(base64Content)) {
-          setIsVerifying(false);
-          setIsProcessing(false);
+      const response = await fetch('/api/verify-slip', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.message === 'slip_already_used') {
           toast.error('สลิปถูกใช้ไปแล้ว');
           return;
         }
+        throw new Error(data.message || 'Failed to verify slip');
+      }
 
-        // If payload is new, proceed with API call
-        const formData = new FormData();
-        formData.append('slip', selectedFile);
-        formData.append('amount', amount);
-
-        const response = await fetch('/api/verify-slip', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          if (data.message === 'slip_already_used') {
-            storePayload(base64Content);
-            toast.error('สลิปถูกใช้ไปแล้ว');
-            return;
-          }
-          throw new Error(data.message || 'Failed to verify slip');
+      if (data.status === 200) {
+        toast.success('ยืนยันสลิปสำเร็จ');
+        // Reset form
+        setAmount('');
+        setSelectedMethod(null);
+        setSelectedFile(null);
+        // Refresh recent deposits
+        const recentResponse = await fetch('/api/deposits/recent');
+        if (recentResponse.ok) {
+          const recentData = await recentResponse.json();
+          setRecentDeposits(recentData);
         }
-
-        if (data.status === 200) {
-          // Store successful payload
-          storePayload(base64Content);
-          
-          toast.success('ยืนยันสลิปสำเร็จ');
-          setAmount('');
-          setSelectedMethod(null);
-          setSelectedFile(null);
-          
-          // Refresh recent deposits
-          const recentResponse = await fetch('/api/deposits/recent');
-          if (recentResponse.ok) {
-            const recentData = await recentResponse.json();
-            setRecentDeposits(recentData);
-          }
-        } else {
-          toast.error(data.message || 'สลิปไม่ถูกต้อง');
-        }
-      };
-
-      fileReader.readAsDataURL(selectedFile);
+      } else {
+        toast.error(data.message || 'สลิปไม่ถูกต้อง');
+      }
     } catch (error) {
       console.error('Error processing deposit:', error);
       toast.error(error instanceof Error ? error.message : 'ไม่สามารถตรวจสอบสลิปได้');
     } finally {
       setIsVerifying(false);
-      setIsProcessing(false);
     }
   };
 
@@ -259,20 +220,19 @@ export default function DepositPage() {
               </div>
 
               <Button 
-  type="submit" 
-  className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-  disabled={!amount || !selectedMethod || !selectedFile || isVerifying || isProcessing}
->
-  {isProcessing ? (
-    <>
-      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      Proceed with Deposit...
-    </>
-  ) : (
-    'Proceed with Deposit'
-  )}
-</Button>
-
+                type="submit" 
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                disabled={!amount || !selectedMethod || !selectedFile || isVerifying}
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Proceed with Deposit'
+                )}
+              </Button>
             </form>
           </CardContent>
         </Card>

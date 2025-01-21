@@ -16,59 +16,20 @@ interface GoldAsset {
   purchasePrice: string;
 }
 
-interface RawGoldAsset {
-  goldType: string;
-  amount: string;
-  purchasePrice: string;
-  userId: number;
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export default function WithdrawPage() {
   const { user } = useUser();
   const [assets, setAssets] = useState<GoldAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [contactDetails, setContactDetails] = useState({
-    name: '',
-    tel: '',
-    address: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchAssets() {
       try {
         const response = await fetch('/api/gold-assets');
         if (response.ok) {
-          const goldAssets = (await response.json()) as RawGoldAsset[];
-          
-          // Combine assets of the same type
-          const combinedAssets = goldAssets.reduce<Record<string, GoldAsset>>((acc, asset) => {
-            const amount = Number(asset.amount);
-            if (amount <= 0) return acc;
-            
-            if (!acc[asset.goldType]) {
-              acc[asset.goldType] = {
-                goldType: asset.goldType,
-                amount: amount.toString(),
-                purchasePrice: asset.purchasePrice
-              };
-            } else {
-              acc[asset.goldType].amount = (Number(acc[asset.goldType].amount) + amount).toString();
-            }
-            return acc;
-          }, {});
-
-          // Convert to array and filter out zero amounts
-          const assetsArray = Object.values(combinedAssets).filter(
-            (asset): asset is GoldAsset => Number(asset.amount) > 0
-          );
-          
-          setAssets(assetsArray);
+          const data = await response.json();
+          setAssets(data.filter((asset: GoldAsset) => Number(asset.amount) > 0));
         }
       } catch (error) {
         console.error('Error fetching assets:', error);
@@ -90,64 +51,29 @@ export default function WithdrawPage() {
       toast.error('Please select an asset and enter withdrawal amount');
       return;
     }
-  
-    if (!contactDetails.name || !contactDetails.tel || !contactDetails.address) {
-      toast.error('Please fill in all contact details');
-      return;
-    }
-  
+
     const asset = assets.find(a => a.goldType === selectedAsset);
     if (!asset) {
       toast.error('Selected asset not found');
       return;
     }
-  
+
     if (Number(withdrawAmount) > Number(asset.amount)) {
       toast.error('Withdrawal amount exceeds available balance');
       return;
     }
-  
-    setIsSubmitting(true);
-  
-    try {
-      const response = await fetch('/api/withdraw-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          goldType: selectedAsset,
-          amount: withdrawAmount,
-          ...contactDetails
-        }),
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit withdrawal request');
-      }
-  
-      // Update local state with new amount
-      setAssets(prevAssets => 
-        prevAssets.map(a => 
-          a.goldType === selectedAsset 
-            ? { ...a, amount: data.remainingAmount }
-            : a
-        )
-      );
-  
-      toast.success('Withdrawal request submitted successfully');
-      setSelectedAsset(null);
-      setWithdrawAmount('');
-      setContactDetails({ name: '', tel: '', address: '' });
-    } catch (error) {
-      console.error('Error submitting withdrawal:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit withdrawal request');
-    } finally {
-      setIsSubmitting(false);
-    }
+
+    // Here you would typically make an API call to process the withdrawal
+    toast.info('Withdrawal request submitted. Please contact support to arrange physical gold collection.');
   };
+
+  if (loading) {
+    return (
+      <section className="flex-1 p-4 lg:p-8">
+        <div className="text-center">Loading...</div>
+      </section>
+    );
+  }
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -215,42 +141,6 @@ export default function WithdrawPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={contactDetails.name}
-                  onChange={(e) => setContactDetails(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tel">Telephone</Label>
-                <Input
-                  id="tel"
-                  type="tel"
-                  value={contactDetails.tel}
-                  onChange={(e) => setContactDetails(prev => ({ ...prev, tel: e.target.value }))}
-                  placeholder="Enter your phone number"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  type="text"
-                  value={contactDetails.address}
-                  onChange={(e) => setContactDetails(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Enter your delivery address"
-                  required
-                />
-              </div>
-
               <div className="bg-orange-50 p-4 rounded-lg text-sm text-orange-800">
                 <p>Important Notes:</p>
                 <ul className="list-disc ml-4 mt-2 space-y-1">
@@ -264,18 +154,52 @@ export default function WithdrawPage() {
               <Button 
                 type="submit" 
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={!selectedAsset || !withdrawAmount || Number(withdrawAmount) <= 0 || isSubmitting}
+                disabled={!selectedAsset || !withdrawAmount || Number(withdrawAmount) <= 0}
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  'Request Withdrawal'
-                )}
+                Request Withdrawal
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Withdrawal Instructions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Step 1: Submit Request</h3>
+                <p className="text-sm text-gray-600">
+                  Select your gold type and enter the amount you wish to withdraw.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Step 2: Verification</h3>
+                <p className="text-sm text-gray-600">
+                  Our team will verify your withdrawal request and contact you.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Step 3: Collection</h3>
+                <p className="text-sm text-gray-600">
+                  Visit our office with proper identification to collect your physical gold.
+                </p>
+              </div>
+
+              <div className="mt-6 p-4 border rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Contact Support</h3>
+                <p className="text-sm text-gray-600">
+                  For assistance with withdrawals, please contact our support team:
+                  <br />
+                  Email: support@example.com
+                  <br />
+                  Phone: +66 XX-XXX-XXXX
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
