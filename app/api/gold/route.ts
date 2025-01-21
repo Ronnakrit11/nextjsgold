@@ -10,9 +10,10 @@ export const revalidate = 0;
 export async function GET() {
   try {
     // Try to get cached gold prices
-    const cachedPrices = await redis.get(CACHE_KEYS.GOLD_PRICES);
+    const cachedPrices: string | null = await redis.get(CACHE_KEYS.GOLD_PRICES);
     if (cachedPrices) {
-      return new NextResponse(JSON.stringify(cachedPrices), {
+      console.log('Cache hit: Returning cached gold prices');
+      return new NextResponse(cachedPrices, {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
           'Pragma': 'no-cache',
@@ -21,22 +22,31 @@ export async function GET() {
       });
     }
 
+    console.log('Cache miss: Fetching fresh gold prices');
+
     // Try to get cached markup settings
-    let settings = await redis.get<MarkupSetting>(CACHE_KEYS.MARKUP_SETTINGS);
+    let settings: MarkupSetting | null = null;
+    const cachedSettings: string | null = await redis.get(CACHE_KEYS.MARKUP_SETTINGS);
     
-    if (!settings) {
-      // If not cached, fetch from database
-      [settings] = await db
+    if (cachedSettings) {
+      console.log('Cache hit: Using cached markup settings');
+      settings = JSON.parse(cachedSettings) as MarkupSetting;
+    } else {
+      console.log('Cache miss: Fetching markup settings from database');
+      const dbSettings = await db
         .select()
         .from(markupSettings)
         .orderBy(markupSettings.id)
         .limit(1);
         
-      if (settings) {
+      if (dbSettings.length > 0) {
+        settings = dbSettings[0];
         // Cache markup settings
-        await redis.set(CACHE_KEYS.MARKUP_SETTINGS, settings, {
-          ex: CACHE_TTL.MARKUP_SETTINGS
-        });
+        await redis.set(
+          CACHE_KEYS.MARKUP_SETTINGS, 
+          JSON.stringify(settings), 
+          { ex: CACHE_TTL.MARKUP_SETTINGS }
+        );
       }
     }
 
@@ -99,12 +109,16 @@ export async function GET() {
         }
       }) : filteredData;
 
-    // Cache the processed data
-    await redis.set(CACHE_KEYS.GOLD_PRICES, processedData, {
-      ex: CACHE_TTL.GOLD_PRICES
-    });
+    const processedDataString = JSON.stringify(processedData);
 
-    return new NextResponse(JSON.stringify(processedData), {
+    // Cache the processed data
+    await redis.set(
+      CACHE_KEYS.GOLD_PRICES, 
+      processedDataString, 
+      { ex: CACHE_TTL.GOLD_PRICES }
+    );
+
+    return new NextResponse(processedDataString, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Pragma': 'no-cache',
