@@ -18,16 +18,11 @@ export function GoldPricesHome() {
     async function fetchPrices() {
       try {
         const response = await fetch('/api/gold');
-        if (response.ok) {
-          const text = await response.text(); // Get response as text first
-          try {
-            const data = JSON.parse(text); // Then parse it as JSON
-            setPrices(data);
-          } catch (parseError) {
-            console.error('Error parsing gold prices:', parseError);
-            console.log('Raw response:', text); // Log the raw response for debugging
-          }
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        const data = await response.json();
+        setPrices(data);
       } catch (error) {
         console.error('Error fetching gold prices:', error);
       } finally {

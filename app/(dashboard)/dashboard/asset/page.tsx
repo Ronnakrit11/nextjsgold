@@ -70,8 +70,16 @@ export default function AssetPage() {
 
         // Fetch gold prices
         const pricesResponse = await fetch('/api/gold');
-        const pricesData = await pricesResponse.json();
-        setPrices(pricesData);
+        if (pricesResponse.ok) {
+          const text = await pricesResponse.text(); // Get response as text first
+          try {
+            const pricesData = JSON.parse(text); // Then parse it as JSON
+            setPrices(pricesData);
+          } catch (parseError) {
+            console.error('Error parsing gold prices:', parseError);
+            console.log('Raw response:', text); // Log the raw response for debugging
+          }
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {

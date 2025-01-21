@@ -44,6 +44,20 @@ export default function TransactionPage() {
     fetchTransactions();
   }, []);
 
+  // Function to format date consistently
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('th-TH', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).format(date);
+  };
+
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
@@ -88,7 +102,7 @@ export default function TransactionPage() {
                         </p>
                       )}
                       <p className="text-sm text-gray-500">
-                        {new Date(transaction.createdAt).toLocaleString('th-TH')}
+                        {formatDate(transaction.createdAt)}
                       </p>
                     </div>
                   </div>

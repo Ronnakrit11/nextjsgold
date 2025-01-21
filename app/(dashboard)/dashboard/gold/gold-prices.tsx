@@ -23,6 +23,16 @@ interface GoldAsset {
   purchasePrice: string;
 }
 
+interface RawGoldAsset {
+  goldType: string;
+  amount: string;
+  purchasePrice: string;
+  userId: number;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Transaction {
   id: number;
   goldType: string;
@@ -31,6 +41,11 @@ interface Transaction {
   totalPrice: string;
   type: 'buy' | 'sell';
   createdAt: string;
+  user?: {
+    id: number;
+    name: string | null;
+    email: string;
+  };
 }
 
 interface TransactionSummary {
@@ -68,12 +83,12 @@ export function GoldPrices() {
       const balanceData = await balanceResponse.json();
       setBalance(Number(balanceData.balance));
 
-      // Fetch gold assets
+      // Fetch gold assets with proper typing
       const assetsResponse = await fetch('/api/gold-assets');
-      const goldAssets = await assetsResponse.json();
+      const goldAssets: RawGoldAsset[] = await assetsResponse.json();
       
       // Convert to our asset format and combine same types
-      const combinedAssets = goldAssets.reduce((acc: { [key: string]: GoldAsset }, asset: any) => {
+      const combinedAssets = goldAssets.reduce<Record<string, GoldAsset>>((acc, asset) => {
         const amount = Number(asset.amount);
         if (amount <= 0) return acc;
         
@@ -84,17 +99,26 @@ export function GoldPrices() {
             purchasePrice: asset.purchasePrice
           };
         } else {
-          acc[asset.goldType].amount = (Number(acc[asset.goldType].amount) + amount).toString();
+          const currentAmount = Number(acc[asset.goldType].amount);
+          acc[asset.goldType].amount = (currentAmount + amount).toString();
         }
         return acc;
       }, {});
       
       setAssets(Object.values(combinedAssets));
 
-      // Fetch gold prices
+      // Fetch gold prices with proper error handling
       const pricesResponse = await fetch('/api/gold');
-      const pricesData = await pricesResponse.json();
-      setPrices(pricesData);
+      if (pricesResponse.ok) {
+        const text = await pricesResponse.text(); // Get response as text first
+        try {
+          const pricesData = JSON.parse(text); // Then parse it as JSON
+          setPrices(pricesData);
+        } catch (parseError) {
+          console.error('Error parsing gold prices:', parseError);
+          console.log('Raw response:', text); // Log the raw response for debugging
+        }
+      }
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Error fetching data:', error);
