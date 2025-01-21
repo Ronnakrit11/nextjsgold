@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -26,24 +26,38 @@ export default function DashboardLayout({
     const isAdmin = user?.role === 'admin';
     
     const baseItems = [
-      { href: '/dashboard/gold', icon: Coins, label: 'Gold' },
-      { href: '/dashboard/asset', icon: BarChart2, label: 'Asset' },
-      { href: '/dashboard/transaction', icon: FileText, label: 'Transaction' },
-      { href: '/dashboard/deposit', icon: Wallet, label: 'Deposit' },
-      { href: '/dashboard/withdraw', icon: LogOut, label: 'Withdraw Gold' },
-      { href: '/dashboard/general', icon: Settings, label: 'General' },
+      { href: '/dashboard/gold', icon: Coins, label: 'ซื้อขายทอง' },
+      { href: '/dashboard/asset', icon: BarChart2, label: 'สินทรัพย์ทั้งหมด' },
+      { href: '/dashboard/transaction', icon: FileText, label: 'รายการซื้อขายทอง' },
+      { href: '/dashboard/deposit', icon: Wallet, label: 'ฝากเงิน' },
+      { href: '/dashboard/withdraw-money', icon: CreditCard, label: 'ถอนเงิน' },
+      { href: '/dashboard/withdraw', icon: LogOut, label: 'ขอรับทอง' },
+      { href: '/dashboard/withdraw/history', icon: History, label: 'ประวัติการขอรับทอง' },
+      { href: '/dashboard/withdraw-money/history', icon: History, label: 'ประวัติการขอถอนเงิน' },
+      { href: '/dashboard/general', icon: Settings, label: 'ตั้งค่า' },
+      { href: '/dashboard/security', icon: Shield, label: 'เปลี่ยนรหัสผ่าน' },
+      { href: '/dashboard/2fa', icon: Key, label: 'ตั้งค่า 2FA' },
       { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-      { href: '/dashboard/security', icon: Shield, label: 'Security' },
     ];
 
     const adminItems = [
-      { href: '/dashboard/set-price', icon: Settings, label: 'Set Price' },
-      { href: '/dashboard/customers', icon: UserCircle, label: 'Customers' },
-      { href: '/dashboard/website-settings', icon: Globe, label: 'Website Setting' },
-      { href: '/dashboard/admin', icon: Shield, label: 'Admin Management' },
+      { href: '/dashboard/set-price', icon: Settings, label: 'กำหนดราคา' },
+      { href: '/dashboard/customers', icon: UserCircle, label: 'ลูกค้าทั้งหมด' },
+      { href: '/dashboard/withdraw-money-requests', icon: BanknoteIcon, label: 'รายการขอถอนเงิน' },
+      { href: '/dashboard/withdraw-list', icon: ClipboardList, label: 'รายการขอรับทอง' },
+      { href: '/dashboard/website-settings', icon: Globe, label: 'จัดการเว็บไซต์' },
+      { href: '/dashboard/admin', icon: Shield, label: 'จัดการเเอดมิน' },
     ];
 
-    setNavItems(isAdmin ? [...baseItems, ...adminItems] : baseItems);
+    // If admin, remove the history menus and add admin items
+    if (isAdmin) {
+      const filteredBaseItems = baseItems.filter(item => 
+        !item.href.includes('/history')
+      );
+      setNavItems([...filteredBaseItems, ...adminItems]);
+    } else {
+      setNavItems(baseItems);
+    }
   }, [user]);
 
   return (

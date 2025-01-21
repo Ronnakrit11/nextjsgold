@@ -36,6 +36,34 @@
       "when": 1736865429299,
       "tag": "0004_round_tyrannus",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1737087256374,
+      "tag": "0005_easy_slayback",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1737273767877,
+      "tag": "0006_worthless_reavers",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1737294436756,
+      "tag": "0007_dark_hammerhead",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1737295645417,
+      "tag": "0008_huge_metal_master",
+      "breakpoints": true
     }
   ]
 }
