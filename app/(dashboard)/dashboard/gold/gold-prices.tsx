@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { pusherClient } from '@/lib/pusher';
 
 interface GoldPrice {
   name: string;
@@ -104,9 +105,60 @@ export function GoldPrices() {
   }
 
   useEffect(() => {
+    async function fetchData() {
+      try {
+        // Initial data fetch
+        const response = await fetch('/api/gold');
+        if (response.ok) {
+          const pricesData = await response.json();
+          setPrices(pricesData);
+        }
+
+        // Subscribe to Pusher channel
+        const channel = pusherClient.subscribe('gold-prices');
+        channel.bind('price-update', (data: GoldPrice[]) => {
+          setPrices(data);
+          setLastUpdate(new Date());
+        });
+
+        // Fetch other data
+        const balanceResponse = await fetch('/api/user/balance');
+        const balanceData = await balanceResponse.json();
+        setBalance(Number(balanceData.balance));
+
+        const assetsResponse = await fetch('/api/gold-assets');
+        const goldAssets = await assetsResponse.json();
+        
+        const combinedAssets = goldAssets.reduce((acc: { [key: string]: GoldAsset }, asset: any) => {
+          const amount = Number(asset.amount);
+          if (amount <= 0) return acc;
+          
+          if (!acc[asset.goldType]) {
+            acc[asset.goldType] = {
+              goldType: asset.goldType,
+              amount: amount.toString(),
+              purchasePrice: asset.purchasePrice
+            };
+          } else {
+            acc[asset.goldType].amount = (Number(acc[asset.goldType].amount) + amount).toString();
+          }
+          return acc;
+        }, {});
+        
+        setAssets(Object.values(combinedAssets));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
+
+    // Cleanup
+    return () => {
+      pusherClient.unsubscribe('gold-prices');
+    };
   }, []);
 
   const getPortfolioSummary = (goldType: string) => {

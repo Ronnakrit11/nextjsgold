@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { pusherClient } from '@/lib/pusher';
 
 interface GoldPrice {
   name: string;
@@ -15,6 +16,7 @@ export function GoldPricesHome() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Initial fetch
     async function fetchPrices() {
       try {
         const response = await fetch('/api/gold');
@@ -30,8 +32,22 @@ export function GoldPricesHome() {
     }
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 5000);
-    return () => clearInterval(interval);
+
+    // Subscribe to Pusher channel
+    try {
+      const channel = pusherClient.subscribe('gold-prices');
+      channel.bind('price-update', (data: GoldPrice[]) => {
+        setPrices(data);
+      });
+
+      // Cleanup
+      return () => {
+        channel.unbind('price-update');
+        pusherClient.unsubscribe('gold-prices');
+      };
+    } catch (error) {
+      console.error('Pusher subscription error:', error);
+    }
   }, []);
 
   if (loading) {
