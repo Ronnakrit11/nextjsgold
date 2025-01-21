@@ -1,19 +1,44 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { markupSettings } from '@/lib/db/schema';
+import { markupSettings, type MarkupSetting } from '@/lib/db/schema';
+import { redis, CACHE_KEYS, CACHE_TTL } from '@/lib/redis';
 
-export const dynamic = 'force-dynamic'; // Disable caching at the route level
-export const fetchCache = 'force-no-store'; // Disable fetch caching
-export const revalidate = 0; // Disable revalidation
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 export async function GET() {
   try {
-    // Fetch markup settings
-    const [settings] = await db
-      .select()
-      .from(markupSettings)
-      .orderBy(markupSettings.id)
-      .limit(1);
+    // Try to get cached gold prices
+    const cachedPrices = await redis.get(CACHE_KEYS.GOLD_PRICES);
+    if (cachedPrices) {
+      return new NextResponse(JSON.stringify(cachedPrices), {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      });
+    }
+
+    // Try to get cached markup settings
+    let settings = await redis.get<MarkupSetting>(CACHE_KEYS.MARKUP_SETTINGS);
+    
+    if (!settings) {
+      // If not cached, fetch from database
+      [settings] = await db
+        .select()
+        .from(markupSettings)
+        .orderBy(markupSettings.id)
+        .limit(1);
+        
+      if (settings) {
+        // Cache markup settings
+        await redis.set(CACHE_KEYS.MARKUP_SETTINGS, settings, {
+          ex: CACHE_TTL.MARKUP_SETTINGS
+        });
+      }
+    }
 
     const response = await fetch('http://www.thaigold.info/RealTimeDataV2/gtdata_.txt', {
       cache: 'no-store',
@@ -42,46 +67,44 @@ export async function GET() {
     });
 
     // Apply markup percentages if settings exist
-    if (settings) {
-      return new NextResponse(JSON.stringify(filteredData.map((item: any) => {
+    const processedData = settings ? 
+      filteredData.map((item: any) => {
         switch (item.name) {
           case 'GoldSpot':
             return {
               ...item,
-              bid: Number(item.bid) * (1 + Number(settings.goldSpotBid) / 100),
-              ask: Number(item.ask) * (1 + Number(settings.goldSpotAsk) / 100)
+              bid: Number(item.bid) * (1 + Number(settings.goldSpotBid || 0) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.goldSpotAsk || 0) / 100)
             };
           case '99.99%':
             return {
               ...item,
-              bid: Number(item.bid) * (1 + Number(settings.gold9999Bid) / 100),
-              ask: Number(item.ask) * (1 + Number(settings.gold9999Ask) / 100)
+              bid: Number(item.bid) * (1 + Number(settings.gold9999Bid || 0) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.gold9999Ask || 0) / 100)
             };
           case '96.5%':
             return {
               ...item,
-              bid: Number(item.bid) * (1 + Number(settings.gold965Bid) / 100),
-              ask: Number(item.ask) * (1 + Number(settings.gold965Ask) / 100)
+              bid: Number(item.bid) * (1 + Number(settings.gold965Bid || 0) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.gold965Ask || 0) / 100)
             };
           case 'สมาคมฯ':
             return {
               ...item,
-              bid: Number(item.bid) * (1 + Number(settings.goldAssociationBid) / 100),
-              ask: Number(item.ask) * (1 + Number(settings.goldAssociationAsk) / 100)
+              bid: Number(item.bid) * (1 + Number(settings.goldAssociationBid || 0) / 100),
+              ask: Number(item.ask) * (1 + Number(settings.goldAssociationAsk || 0) / 100)
             };
           default:
             return item;
         }
-      })), {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        },
-      });
-    }
+      }) : filteredData;
 
-    return new NextResponse(JSON.stringify(filteredData), {
+    // Cache the processed data
+    await redis.set(CACHE_KEYS.GOLD_PRICES, processedData, {
+      ex: CACHE_TTL.GOLD_PRICES
+    });
+
+    return new NextResponse(JSON.stringify(processedData), {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Pragma': 'no-cache',
