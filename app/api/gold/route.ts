@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { markupSettings } from '@/lib/db/schema';
-import { pusherServer } from '@/lib/pusher';
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
+export const dynamic = 'force-dynamic'; // Disable caching at the route level
+export const fetchCache = 'force-no-store'; // Disable fetch caching
+export const revalidate = 0; // Disable revalidation
 
 export async function GET() {
   try {
@@ -43,9 +42,8 @@ export async function GET() {
     });
 
     // Apply markup percentages if settings exist
-    let finalData;
     if (settings) {
-      finalData = filteredData.map((item: any) => {
+      return new NextResponse(JSON.stringify(filteredData.map((item: any) => {
         switch (item.name) {
           case 'GoldSpot':
             return {
@@ -74,15 +72,16 @@ export async function GET() {
           default:
             return item;
         }
+      })), {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
       });
-    } else {
-      finalData = filteredData;
     }
 
-    // Trigger Pusher event with the new prices
-    await pusherServer.trigger('gold-prices', 'price-update', finalData);
-
-    return new NextResponse(JSON.stringify(finalData), {
+    return new NextResponse(JSON.stringify(filteredData), {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Pragma': 'no-cache',
