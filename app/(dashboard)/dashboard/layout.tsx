@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon } from 'lucide-react';
 import { useUser } from '@/lib/auth';
+import { SocialContacts } from '@/components/SocialContacts';
 
 export default function DashboardLayout({
   children,
@@ -106,6 +107,7 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-0 lg:p-4">{children}</main>
+        <SocialContacts/>
       </div>
     </div>
   );
