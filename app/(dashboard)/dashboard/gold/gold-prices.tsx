@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useTheme } from '@/lib/theme-provider';
 
 interface GoldPrice {
   name: string;
@@ -46,6 +47,7 @@ interface TransactionSummary {
 }
 
 export function GoldPrices() {
+  const { theme } = useTheme();
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -256,7 +258,7 @@ export function GoldPrices() {
 
   return (
     <div className="space-y-4">
-      <Card className="bg-gradient-to-r from-orange-500 to-orange-600">
+      <Card className={`${theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : 'bg-gradient-to-r from-orange-500 to-orange-600'}`}>
         <CardContent className="p-6">
           <div className="text-white">
             <div className="flex justify-between items-center">
@@ -269,7 +271,7 @@ export function GoldPrices() {
         </CardContent>
       </Card>
 
-      <div className="text-center text-gray-600 text-sm -mt-2 mb-2">
+      <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm -mt-2 mb-2`}>
         อัพเดทล่าสุด: {lastUpdate.toLocaleString('th-TH')}
       </div>
 
@@ -281,26 +283,26 @@ export function GoldPrices() {
         const summary = getPortfolioSummary(goldType);
 
         return (
-          <Card key={index} className="bg-white overflow-hidden">
-            <CardContent className="p-6">
+          <div key={index} className={`${theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : 'bg-white'} rounded-lg border overflow-hidden`}>
+            <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-14 h-14 bg-yellow-50 rounded-full flex items-center justify-center">
+                  <div className={`w-14 h-14 ${theme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-yellow-50'} rounded-full flex items-center justify-center`}>
                     <Image
                       src="/gold.png"
                       alt="Gold"
                       width={32}
                       height={32}
-                      className="object-contain"
+                      className={theme === 'dark' ? 'brightness-[10]' : ''}
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">{goldType}</h3>
+                    <h3 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{goldType}</h3>
                     {price.name !== "THB" && (
-                      <p className="text-sm text-gray-500">0.027 oz</p>
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>0.027 oz</p>
                     )}
                     {summary.units > 0.0001 && (
-                      <p className="text-sm text-orange-600">
+                      <p className="text-sm text-[#4CAF50]">
                         พอร์ต: {summary.units.toFixed(4)} บาท
                       </p>
                     )}
@@ -309,14 +311,14 @@ export function GoldPrices() {
                 <div className="flex items-center gap-2">
                   <Button
                     onClick={() => handleBuyClick(price)}
-                    className="bg-green-500 hover:bg-green-600 text-white h-8 w-16"
+                    className="bg-[#4CAF50] hover:bg-[#45a049] text-white h-8 w-16"
                     size="sm"
                   >
                     ซื้อ
                   </Button>
                   <Button
                     onClick={() => handleSellClick(price)}
-                    className="bg-red-500 hover:bg-red-600 text-white h-8 w-16"
+                    className="bg-[#ef5350] hover:bg-[#e53935] text-white h-8 w-16"
                     size="sm"
                   >
                     ขาย
@@ -325,220 +327,221 @@ export function GoldPrices() {
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">ราคารับซื้อ</p>
-                  <p className="text-md font-semibold text-gray-900">
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>ราคารับซื้อ</p>
+                  <p className={`text-md font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     {price.name === "GoldSpot" ? 
                       `$${Number(price.bid).toLocaleString()}` : 
                       `${Number(price.bid).toLocaleString()} บาท`}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">ราคาขายออก</p>
-                  <p className="text-md font-semibold text-gray-900">
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>ราคาขายออก</p>
+                  <p className={`text-md font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     {price.name === "GoldSpot" ? 
                       `$${Number(price.ask).toLocaleString()}` : 
                       `${Number(price.ask).toLocaleString()} บาท`}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-500">Change</p>
-                  <p className={`text-lg font-semibold ${Number(price.diff) > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Change</p>
+                  <p className={`text-lg font-semibold ${Number(price.diff) > 0 ? 'text-[#4CAF50]' : 'text-[#ef5350]'}`}>
                     {Number(price.diff).toFixed(2)}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       })}
 
-       {/* Buy Dialog */}
-  <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>ซื้อทอง</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label>จำนวนเงิน</Label>
-          <Input
-            type="number"
-            value={moneyAmount}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === '' || Number(value) <= balance) {
-                setMoneyAmount(value);
-              }
-            }}
-            placeholder="ระบุจำนวนเงินที่ต้องการซื้อ"
-          />
-        </div>
-        {moneyAmount && selectedPrice && (
-          <div className="space-y-2">
-            <Label>จำนวนทอง</Label>
-            <p className="text-lg font-semibold">
-              {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} หน่วย
-            </p>
+      {/* Buy Dialog */}
+      <Dialog open={isBuyDialogOpen} onOpenChange={setIsBuyDialogOpen}>
+        <DialogContent className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A] text-white' : ''}>
+          <DialogHeader>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>ซื้อทอง</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className={theme === 'dark' ? 'text-white' : ''}>จำนวนเงิน</Label>
+              <Input
+                type="number"
+                value={moneyAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || Number(value) <= balance) {
+                    setMoneyAmount(value);
+                  }
+                }}
+                placeholder="ระบุจำนวนเงินที่ต้องการซื้อ"
+                className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}
+              />
+            </div>
+            {moneyAmount && selectedPrice && (
+              <div className="space-y-2">
+                <Label className={theme === 'dark' ? 'text-white' : ''}>จำนวนทอง</Label>
+                <p className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : ''}`}>
+                  {(Number(moneyAmount) / Number(selectedPrice.ask)).toFixed(4)} หน่วย
+                </p>
+              </div>
+            )}
+            <Button
+              onClick={handleBuySubmit}
+              className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white"
+              disabled={!moneyAmount || Number(moneyAmount) <= 0 || Number(moneyAmount) > balance || isBuyProcessing}
+            >
+              {isBuyProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังทำรายการ...
+                </>
+              ) : (
+                'ยืนยันคำสั่งซื้อ'
+              )}
+            </Button>
           </div>
-        )}
-        <Button
-          onClick={handleBuySubmit}
-          className="w-full bg-green-500 hover:bg-green-600 text-white"
-          disabled={!moneyAmount || Number(moneyAmount) <= 0 || Number(moneyAmount) > balance || isBuyProcessing}
-        >
-          {isBuyProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              กำลังทำรายการ...
-            </>
-          ) : (
-            'ยืนยันคำสั่งซื้อ'
-          )}
-        </Button>
-      </div>
-    </DialogContent>
-  </Dialog>
-
+        </DialogContent>
+      </Dialog>
 
       {/* Sell Dialog */}
-  <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>ขายทอง</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4 py-4">
-        {selectedPrice && (() => {
-          const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
-                          selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
-                          selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
-                          selectedPrice.name;
-          const summary = getPortfolioSummary(goldType);
-          return summary.units > 0.0001 ? (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">ทองในพอร์ต</p>
-              <p className="text-lg font-semibold">{summary.units.toFixed(4)} หน่วย</p>
+      <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
+        <DialogContent className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A] text-white' : ''}>
+          <DialogHeader>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>ขายทอง</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedPrice && (() => {
+              const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                              selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
+                              selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
+                              selectedPrice.name;
+              const summary = getPortfolioSummary(goldType);
+              return summary.units > 0.0001 ? (
+                <div className={`mb-4 p-3 ${theme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-gray-50'} rounded-lg`}>
+                  <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>ทองในพอร์ต</p>
+                  <p className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : ''}`}>{summary.units.toFixed(4)} หน่วย</p>
+                </div>
+              ) : null;
+            })()}
+            <div className="space-y-2">
+              <Label className={theme === 'dark' ? 'text-white' : ''}>จำนวนหน่วยที่ต้องการขาย</Label>
+              <Input
+                type="number"
+                value={sellUnits}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (selectedPrice) {
+                    const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                                    selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
+                                    selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
+                                    selectedPrice.name;
+                    const summary = getPortfolioSummary(goldType);
+                    if (value === '' || Number(value) <= summary.units) {
+                      setSellUnits(value);
+                    }
+                  }
+                }}
+                placeholder="ระบุจำนวนหน่วยที่ต้องการขาย"
+                className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  if (selectedPrice) {
+                    const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
+                                    selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
+                                    selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
+                                    selectedPrice.name;
+                    const summary = getPortfolioSummary(goldType);
+                    setSellUnits(summary.units.toString());
+                  }
+                }}
+                className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white mt-2"
+              >
+                ขายทั้งหมด
+              </Button>
             </div>
-          ) : null;
-        })()}
-        <div className="space-y-2">
-          <Label>จำนวนหน่วยที่ต้องการขาย</Label>
-          <Input
-            type="number"
-            value={sellUnits}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (selectedPrice) {
-                const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
-                                selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
-                                selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
-                                selectedPrice.name;
-                const summary = getPortfolioSummary(goldType);
-                if (value === '' || Number(value) <= summary.units) {
-                  setSellUnits(value);
-                }
-              }
-            }}
-            placeholder="ระบุจำนวนหน่วยที่ต้องการขาย"
-          />
-          <Button
-            type="button"
-            onClick={() => {
-              if (selectedPrice) {
-                const goldType = selectedPrice.name === "สมาคมฯ" ? "ทองสมาคม" : 
-                                selectedPrice.name === "99.99%" ? "ทอง 99.99%" : 
-                                selectedPrice.name === "96.5%" ? "ทอง 96.5%" : 
-                                selectedPrice.name;
-                const summary = getPortfolioSummary(goldType);
-                setSellUnits(summary.units.toString());
-              }
-            }}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white mt-2"
-          >
-            ขายทั้งหมด
-          </Button>
-        </div>
-        {sellUnits && selectedPrice && (
-          <div className="space-y-2">
-            <Label>จำนวนเงินที่จะได้รับ</Label>
-            <p className="text-lg font-semibold text-green-600">
-              ฿{(Number(sellUnits) * Number(selectedPrice.bid)).toLocaleString()}
-            </p>
+            {sellUnits && selectedPrice && (
+              <div className="space-y-2">
+                <Label className={theme === 'dark' ? 'text-white' : ''}>จำนวนเงินที่จะได้รับ</Label>
+                <p className="text-lg font-semibold text-[#4CAF50]">
+                  ฿{(Number(sellUnits) * Number(selectedPrice.bid)).toLocaleString()}
+                </p>
+              </div>
+            )}
+            <Button
+              onClick={handleSellSubmit}
+              className="w-full bg-[#ef5350] hover:bg-[#e53935] text-white"
+              disabled={!sellUnits || Number(sellUnits) <= 0 || isSellProcessing}
+            >
+              {isSellProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังทำรายการ...
+                </>
+              ) : (
+                'ยืนยันการขาย'
+              )}
+            </Button>
           </div>
-        )}
-        <Button
-          onClick={handleSellSubmit}
-          className="w-full bg-red-500 hover:bg-red-600 text-white"
-          disabled={!sellUnits || Number(sellUnits) <= 0 || isSellProcessing}
-        >
-          {isSellProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              กำลังทำรายการ...
-            </>
-          ) : (
-            'ยืนยันการขาย'
-          )}
-        </Button>
-      </div>
-    </DialogContent>
-  </Dialog>
+        </DialogContent>
+      </Dialog>
 
       {/* Summary Dialog */}
       <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
-        <DialogContent>
+        <DialogContent className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A] text-white' : ''}>
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className={theme === 'dark' ? 'text-white' : ''}>
               {transactionSummary?.isSell ? 'สรุปรายการขายทอง' : 'สรุปรายการซื้อทอง'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {transactionSummary && (
               <>
-                <div className="bg-green-50 p-4 rounded-lg text-center mb-4">
-                  <div className="text-green-600 text-xl mb-2">✓ ทำรายการสำเร็จ</div>
+                <div className={`bg-[#4CAF50] bg-opacity-10 p-4 rounded-lg text-center mb-4`}>
+                  <div className="text-[#4CAF50] text-xl mb-2">✓ ทำรายการสำเร็จ</div>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">ประเภททอง</span>
-                    <span className="font-medium">{transactionSummary.goldType}</span>
+                    <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>ประเภททอง</span>
+                    <span className={theme === 'dark' ? 'text-white' : 'font-medium'}>{transactionSummary.goldType}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-gray-600">จำนวนทอง</span>
-                    <span className="font-medium">{transactionSummary.units.toFixed(4)} หน่วย</span>
+                    <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>จำนวนทอง</span>
+                    <span className={theme === 'dark' ? 'text-white' : 'font-medium'}>{transactionSummary.units.toFixed(4)} หน่วย</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-gray-600">ราคาต่อหน่วย</span>
-                    <span className="font-medium">฿{transactionSummary.price.toLocaleString()}</span>
+                    <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>ราคาต่อหน่วย</span>
+                    <span className={theme === 'dark' ? 'text-white' : 'font-medium'}>฿{transactionSummary.price.toLocaleString()}</span>
                   </div>
 
                   {transactionSummary.isSell && (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">ต้นทุนเฉลี่ยก่อนขาย</span>
-                        <span className="font-medium">฿{transactionSummary.previousAvgCost?.toLocaleString()}</span>
+                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>ต้นทุนเฉลี่ยก่อนขาย</span>
+                        <span className={theme === 'dark' ? 'text-white' : 'font-medium'}>฿{transactionSummary.previousAvgCost?.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">ต้นทุนรวมก่อนขาย</span>
-                        <span className="font-medium">฿{transactionSummary.previousTotalCost?.toLocaleString()}</span>
+                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>ต้นทุนรวมก่อนขาย</span>
+                        <span className={theme === 'dark' ? 'text-white' : 'font-medium'}>฿{transactionSummary.previousTotalCost?.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">ต้นทุนเฉลี่ยหลังขาย</span>
-                        <span className="font-medium">฿{transactionSummary.averageCost.toLocaleString()}</span>
+                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>ต้นทุนเฉลี่ยหลังขาย</span>
+                        <span className={theme === 'dark' ? 'text-white' : 'font-medium'}>฿{transactionSummary.averageCost.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">ต้นทุนรวมหลังขาย</span>
-                        <span className="font-medium">฿{transactionSummary.totalCost.toLocaleString()}</span>
+                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>ต้นทุนรวมหลังขาย</span>
+                        <span className={theme === 'dark' ? 'text-white' : 'font-medium'}>฿{transactionSummary.totalCost.toLocaleString()}</span>
                       </div>
                     </>
                   )}
                   
-                  <div className="border-t pt-3">
+                  <div className={`border-t ${theme === 'dark' ? 'border-[#333]' : 'border-gray-200'} pt-3`}>
                     <div className="flex justify-between text-lg font-semibold">
-                      <span>{transactionSummary.isSell ? 'ได้รับเงิน' : 'ยอดชำระ'}</span>
-                      <span className={transactionSummary.isSell ? 'text-green-600' : 'text-red-600'}>
+                      <span className={theme === 'dark' ? 'text-white' : ''}>{transactionSummary.isSell ? 'ได้รับเงิน' : 'ยอดชำระ'}</span>
+                      <span className={transactionSummary.isSell ? 'text-[#4CAF50]' : 'text-[#ef5350]'}>
                         ฿{transactionSummary.total.toLocaleString()}
                       </span>
                     </div>
@@ -547,7 +550,7 @@ export function GoldPrices() {
 
                 <Button 
                   onClick={() => setShowSummaryDialog(false)}
-                  className="w-full mt-4"
+                  className={`w-full mt-4 ${theme === 'dark' ? 'bg-[#333] hover:bg-[#444] text-white' : ''}`}
                 >
                   ปิด
                 </Button>

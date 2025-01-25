@@ -3,8 +3,8 @@ import { ArrowRight, CreditCard, Database } from 'lucide-react';
 import { Terminal } from './terminal';
 import { GoldChart } from '@/components/GoldChart';
 import { SocialContacts } from '@/components/SocialContacts';
-import Link from 'next/link';
 import { GoldPricesHome } from '@/components/GoldPricesHome';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
@@ -36,15 +36,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white dark:bg-[#151515]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">Gold Price Chart</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-[#E0E0E0] mb-8">Gold Price Chart</h2>
           <GoldChart />
           <div className="mt-8">
             <GoldPricesHome />
           </div>
         </div>
       </section>
+
 
       <section className="py-16 bg-white w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
