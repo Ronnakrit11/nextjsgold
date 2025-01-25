@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { Anuphan } from 'next/font/google';
 import { UserProvider } from '@/lib/auth';
 import { getUser } from '@/lib/db/queries';
+import { ThemeProvider } from '@/lib/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Next.js Gold Saving',
@@ -29,10 +30,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`bg-white dark:bg-gray-950 text-black dark:text-white ${anuphan.className}`}
+      className={`${anuphan.className}`}
+      suppressHydrationWarning
     >
-      <body className="min-h-[100dvh] bg-gray-50">
-        <UserProvider userPromise={userPromise}>{children}</UserProvider>
+      <body className="min-h-[100dvh]">
+        <ThemeProvider>
+          <UserProvider userPromise={userPromise}>{children}</UserProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
