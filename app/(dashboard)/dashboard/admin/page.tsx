@@ -10,6 +10,7 @@ import { useUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTheme } from '@/lib/theme-provider';
 
 interface Admin {
   id: number;
@@ -30,6 +31,8 @@ export default function AdminPage() {
       email: '',
       password: '',
     });
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
   
     useEffect(() => {
       fetchAdmins();
@@ -39,15 +42,14 @@ export default function AdminPage() {
       redirect('/sign-in');
     }
   
-    // Check if user is an admin
     if (user.role !== 'admin') {
       return (
         <section className="flex-1 p-4 lg:p-8">
-          <Card>
+          <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-              <p className="text-gray-500 text-center max-w-md">
+              <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>Access Denied</h2>
+              <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-center max-w-md`}>
                 Only administrators have access to this page.
               </p>
             </CardContent>
@@ -55,7 +57,6 @@ export default function AdminPage() {
         </section>
       );
     }
-  
 
   async function fetchAdmins() {
     try {
@@ -103,7 +104,7 @@ export default function AdminPage() {
   return (
     <section className="flex-1 p-4 lg:p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-lg lg:text-2xl font-medium text-gray-900">
+        <h1 className={`text-lg lg:text-2xl font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
           Admin Management
         </h1>
         <Button 
@@ -115,11 +116,11 @@ export default function AdminPage() {
         </Button>
       </div>
 
-      <Card>
+      <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Shield className="h-6 w-6 text-orange-500" />
-            <span>Administrators</span>
+            <span className={isDark ? 'text-white' : ''}>Administrators</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -127,20 +128,24 @@ export default function AdminPage() {
             {admins.map((admin) => (
               <div
                 key={admin.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                className={`flex items-center justify-between p-4 border rounded-lg ${
+                  isDark 
+                    ? 'bg-[#000000] border-[#2A2A2A] hover:bg-[#151515]' 
+                    : 'bg-white border-gray-200 hover:bg-gray-50'
+                }`}
               >
                 <div className="flex items-center space-x-4">
-                  <div className="p-2 bg-orange-100 rounded-full">
-                    <Mail className="h-5 w-5 text-orange-600" />
+                  <div className={`p-2 ${isDark ? 'bg-[#151515]' : 'bg-orange-100'} rounded-full`}>
+                    <Mail className={`h-5 w-5 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {admin.name || 'Unnamed Admin'}
                     </p>
-                    <p className="text-sm text-gray-500">{admin.email}</p>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{admin.email}</p>
                   </div>
                 </div>
-                <span className="text-sm text-gray-500">
+                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   Added {new Date(admin.createdAt).toLocaleDateString()}
                 </span>
               </div>
@@ -150,23 +155,24 @@ export default function AdminPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <DialogHeader>
-            <DialogTitle>Add New Administrator</DialogTitle>
+            <DialogTitle className={isDark ? 'text-white' : ''}>Add New Administrator</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className={isDark ? 'text-white' : ''}>Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Enter admin name"
                 required
+                className={isDark ? 'bg-[#000000] border-[#2A2A2A] text-white placeholder:text-gray-500' : ''}
               />
             </div>
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className={isDark ? 'text-white' : ''}>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -174,10 +180,11 @@ export default function AdminPage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="Enter admin email"
                 required
+                className={isDark ? 'bg-[#000000] border-[#2A2A2A] text-white placeholder:text-gray-500' : ''}
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className={isDark ? 'text-white' : ''}>Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -186,6 +193,7 @@ export default function AdminPage() {
                 placeholder="Enter admin password"
                 required
                 minLength={8}
+                className={isDark ? 'bg-[#121212] border-[#2A2A2A] text-white placeholder:text-gray-500' : ''}
               />
             </div>
             <Button

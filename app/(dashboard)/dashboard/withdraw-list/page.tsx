@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useTheme } from '@/lib/theme-provider';
 
 interface WithdrawalRequest {
   id: number;
@@ -29,6 +30,8 @@ export default function WithdrawListPage() {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchWithdrawals();
@@ -64,7 +67,6 @@ export default function WithdrawListPage() {
       }
 
       toast.success(`Withdrawal request ${status} successfully`);
-      // Refresh the list after update
       await fetchWithdrawals();
     } catch (error) {
       console.error('Error updating status:', error);
@@ -81,11 +83,11 @@ export default function WithdrawListPage() {
   if (user.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
-        <Card>
+        <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-500 text-center max-w-md">
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>Access Denied</h2>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-center max-w-md`}>
               Only administrators have access to the withdrawal list. Please contact an administrator for assistance.
             </p>
           </CardContent>
@@ -96,14 +98,14 @@ export default function WithdrawListPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium ${isDark ? 'text-white' : 'text-gray-900'} mb-6`}>
         ประวัติการถอนทองทั้งหมด
       </h1>
-      <Card>
+      <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <ClipboardList className="h-6 w-6 text-orange-500" />
-            <span>Pending Withdrawals</span>
+            <span className={isDark ? 'text-white' : ''}>Pending Withdrawals</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -114,23 +116,23 @@ export default function WithdrawListPage() {
               {withdrawals.map((withdrawal) => (
                 <div
                   key={withdrawal.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50"
+                  className={`${isDark ? 'bg-[#151515] hover:bg-[#151515]' : 'bg-white hover:bg-gray-50'} border ${isDark ? 'border-[#2A2A2A]' : 'border-gray-200'} rounded-lg p-4`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-medium text-lg">{withdrawal.name}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className={`font-medium text-lg ${isDark ? 'text-white' : ''}`}>{withdrawal.name}</h3>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         Requested by: {withdrawal.user.email}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         Tel: {withdrawal.tel}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">
+                      <p className={`font-medium ${isDark ? 'text-white' : ''}`}>
                         {withdrawal.goldType} - {Number(withdrawal.amount).toFixed(4)} บาท
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         {new Date(withdrawal.createdAt).toLocaleString('th-TH')}
                       </p>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${
@@ -142,8 +144,8 @@ export default function WithdrawListPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-md mb-4">
-                    <p className="text-sm text-gray-600">
+                  <div className={`${isDark ? 'bg-[#151515]' : 'bg-gray-50'} p-3 rounded-md mb-4`}>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       <span className="font-medium">Delivery Address:</span><br />
                       {withdrawal.address}
                     </p>
@@ -153,7 +155,7 @@ export default function WithdrawListPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-red-600 border-red-600 hover:bg-red-50"
+                        className={`text-red-600 ${isDark ? 'border-red-600 hover:bg-red-950' : 'border-red-600 hover:bg-red-50'}`}
                         onClick={() => handleStatusUpdate(withdrawal.id, 'rejected')}
                         disabled={processingId === withdrawal.id}
                       >
@@ -181,7 +183,7 @@ export default function WithdrawListPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
               No withdrawal requests yet
             </div>
           )}

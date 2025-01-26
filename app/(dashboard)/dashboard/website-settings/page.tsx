@@ -8,6 +8,7 @@ import { Settings, ShieldAlert, Save } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 import { useState, useEffect } from 'react';
 import { redirect } from 'next/navigation';
+import { useTheme } from '@/lib/theme-provider';
 
 export default function WebsiteSettingsPage() {
   const { user } = useUser();
@@ -18,6 +19,8 @@ export default function WebsiteSettingsPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     async function fetchSettings() {
@@ -46,11 +49,11 @@ export default function WebsiteSettingsPage() {
   if (user.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
-        <Card>
+        <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-500 text-center max-w-md">
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>Access Denied</h2>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-center max-w-md`}>
               Only administrators have access to website settings. Please contact an administrator for assistance.
             </p>
           </CardContent>
@@ -58,7 +61,6 @@ export default function WebsiteSettingsPage() {
       </section>
     );
   }
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,46 +94,49 @@ export default function WebsiteSettingsPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium ${isDark ? 'text-white' : 'text-gray-900'} mb-6`}>
         Website Settings
       </h1>
-      <Card>
+      <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Settings className="h-6 w-6 text-orange-500" />
-            <span>Social Media Settings</span>
+            <span className={isDark ? 'text-white' : ''}>Social Media Settings</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="facebook">Facebook Link</Label>
+                <Label htmlFor="facebook" className={isDark ? 'text-white' : ''}>Facebook Link</Label>
                 <Input
                   id="facebook"
                   value={settings.facebookLink}
                   onChange={(e) => setSettings(prev => ({ ...prev, facebookLink: e.target.value }))}
                   placeholder="https://facebook.com/your-page"
+                  className={isDark ? 'bg-[#000000] border-[#2A2A2A] text-white placeholder:text-gray-500' : ''}
                 />
               </div>
 
               <div>
-                <Label htmlFor="line">Line OA Link</Label>
+                <Label htmlFor="line" className={isDark ? 'text-white' : ''}>Line OA Link</Label>
                 <Input
                   id="line"
                   value={settings.lineOaLink}
                   onChange={(e) => setSettings(prev => ({ ...prev, lineOaLink: e.target.value }))}
                   placeholder="https://line.me/your-account"
+                  className={isDark ? 'bg-[#000000] border-[#2A2A2A] text-white placeholder:text-gray-500' : ''}
                 />
               </div>
 
               <div>
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone" className={isDark ? 'text-white' : ''}>Phone Number</Label>
                 <Input
                   id="phone"
                   value={settings.phoneNumber}
                   onChange={(e) => setSettings(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   placeholder="+66123456789"
+                  className={isDark ? 'bg-[#000000] border-[#2A2A2A] text-white placeholder:text-gray-500' : ''}
                 />
               </div>
             </div>

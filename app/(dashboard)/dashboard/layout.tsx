@@ -65,7 +65,7 @@ export default function DashboardLayout({
   return (
     <div className={`flex flex-col min-h-screen w-full ${isDark ? 'bg-[#121212]' : 'bg-white'}`}>
       {/* Mobile header */}
-      <div className={`lg:hidden flex items-center justify-between ${isDark ? 'bg-[#1E1E1E] border-[#2A2A2A]' : 'bg-white border-gray-200'} border-b p-4`}>
+      <div className={`lg:hidden flex items-center justify-between ${isDark ? 'bg-[#151515] border-[#2A2A2A]' : 'bg-white border-gray-200'} border-b p-4`}>
         <div className="flex items-center">
           <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Settings</span>
         </div>
@@ -96,7 +96,7 @@ export default function DashboardLayout({
         {/* Sidebar */}
         <aside
           className={`w-56 lg:w-64 ${
-            isDark ? 'bg-[#1E1E1E] border-[#2A2A2A]' : 'bg-gray-50 border-gray-200'
+            isDark ? 'bg-[#121212] border-[#2A2A2A]' : 'bg-gray-50 border-gray-200'
           } border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           } fixed lg:relative inset-y-0 left-0 z-50 h-full`}
@@ -176,7 +176,7 @@ export default function DashboardLayout({
         <main className={`flex-1 overflow-y-auto p-4 ${isDark ? 'bg-[#121212]' : 'bg-white'}`}>
           {children}
         </main>
-    
+        <SocialContacts/>
       </div>
     </div>
   );
