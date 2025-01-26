@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { History } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useUser } from '@/lib/auth';
+import { useTheme } from '@/lib/theme-provider';
 
 interface WithdrawalRequest {
   id: number;
@@ -18,6 +19,7 @@ interface WithdrawalRequest {
 
 export default function WithdrawHistoryPage() {
   const { user } = useUser();
+  const { theme } = useTheme();
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,38 +56,44 @@ export default function WithdrawHistoryPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         Withdrawal History
       </h1>
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-white' : ''}`}>
             <History className="h-6 w-6 text-orange-500" />
             <span>Your Withdrawal Requests</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : ''}`}>Loading...</div>
           ) : withdrawals.length > 0 ? (
             <div className="space-y-4">
               {withdrawals.map((withdrawal) => (
                 <div
                   key={withdrawal.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50"
+                  className={`border rounded-lg p-4 ${
+                    theme === 'dark' 
+                      ? 'bg-[#1a1a1a] border-[#2A2A2A] hover:bg-[#252525]' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-medium text-lg">{withdrawal.name}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className={`font-medium text-lg ${theme === 'dark' ? 'text-white' : ''}`}>
+                        {withdrawal.name}
+                      </h3>
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                         Tel: {withdrawal.tel}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">
+                      <p className={`font-medium ${theme === 'dark' ? 'text-white' : ''}`}>
                         {withdrawal.goldType} - {Number(withdrawal.amount).toFixed(4)} บาท
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                         {new Date(withdrawal.createdAt).toLocaleString('th-TH')}
                       </p>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${getStatusColor(withdrawal.status)}`}>
@@ -93,9 +101,16 @@ export default function WithdrawHistoryPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Delivery Address:</span><br />
+                  <div className={`p-3 rounded-md ${
+                    theme === 'dark' 
+                      ? 'bg-[#252525] text-gray-300' 
+                      : 'bg-gray-50 text-gray-600'
+                  }`}>
+                    <p className="text-sm">
+                      <span className={`font-medium ${theme === 'dark' ? 'text-white' : ''}`}>
+                        Delivery Address:
+                      </span>
+                      <br />
                       {withdrawal.address}
                     </p>
                   </div>
@@ -103,7 +118,7 @@ export default function WithdrawHistoryPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               No withdrawal history yet
             </div>
           )}

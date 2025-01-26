@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { getUser } from '@/lib/db/queries';
 import { desc, isNull } from 'drizzle-orm';
 import { ShieldAlert } from 'lucide-react';
+import { useTheme } from '@/lib/theme-provider';
 
 export default async function CustomersPage() {
   const currentUser = await getUser();
@@ -17,11 +18,11 @@ export default async function CustomersPage() {
   if (currentUser.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
-        <Card>
+        <Card className="dark:bg-[#151515] dark:border-[#2A2A2A]">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-500 text-center max-w-md">
+            <h2 className="text-xl font-semibold dark:text-white text-gray-900 mb-2">Access Denied</h2>
+            <p className="text-center max-w-md dark:text-gray-400 text-gray-500">
               Only administrators have access to the customer list. Please contact an administrator for assistance.
             </p>
           </CardContent>
@@ -45,12 +46,12 @@ export default async function CustomersPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className="text-lg lg:text-2xl font-medium dark:text-white text-gray-900 mb-6">
         Customers
       </h1>
-      <Card>
+      <Card className="dark:bg-[#151515] dark:border-[#2A2A2A]">
         <CardHeader>
-          <CardTitle>Customer List</CardTitle>
+          <CardTitle className="dark:text-white">Customer List</CardTitle>
         </CardHeader>
         <CardContent>
           <CustomerList users={allUsers} />

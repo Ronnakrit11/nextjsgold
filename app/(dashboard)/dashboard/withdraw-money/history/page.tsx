@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { History } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useUser } from '@/lib/auth';
+import { useTheme } from '@/lib/theme-provider';
 
 interface WithdrawalRequest {
   id: number;
@@ -25,6 +26,7 @@ const BANK_NAMES: { [key: string]: string } = {
 
 export default function WithdrawMoneyHistoryPage() {
   const { user } = useUser();
+  const { theme } = useTheme();
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,33 +63,39 @@ export default function WithdrawMoneyHistoryPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         Withdrawal History
       </h1>
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-white' : ''}`}>
             <History className="h-6 w-6 text-orange-500" />
             <span>Your Withdrawal Requests</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : ''}`}>Loading...</div>
           ) : withdrawals.length > 0 ? (
             <div className="space-y-4">
               {withdrawals.map((withdrawal) => (
                 <div
                   key={withdrawal.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50"
+                  className={`border rounded-lg p-4 ${
+                    theme === 'dark' 
+                      ? 'bg-[#1a1a1a] border-[#2A2A2A] hover:bg-[#252525]' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-medium text-lg">{withdrawal.accountName}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className={`font-medium text-lg ${theme === 'dark' ? 'text-white' : ''}`}>
+                        {withdrawal.accountName}
+                      </h3>
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                         Bank: {BANK_NAMES[withdrawal.bank]}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                         Account: {withdrawal.accountNumber}
                       </p>
                     </div>
@@ -95,7 +103,7 @@ export default function WithdrawMoneyHistoryPage() {
                       <p className="font-medium text-lg text-orange-500">
                         ฿{Number(withdrawal.amount).toLocaleString()}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                         {new Date(withdrawal.createdAt).toLocaleString('th-TH')}
                       </p>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${getStatusColor(withdrawal.status)}`}>
@@ -107,7 +115,7 @@ export default function WithdrawMoneyHistoryPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               No withdrawal history yet
             </div>
           )}

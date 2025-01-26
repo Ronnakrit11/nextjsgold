@@ -9,8 +9,10 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useUser } from '@/lib/auth';
 import Image from 'next/image';
+import { useTheme } from '@/lib/theme-provider';
 
 export default function TwoFactorAuthPage() {
+  const { theme } = useTheme();
   const { user } = useUser();
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
@@ -39,12 +41,8 @@ export default function TwoFactorAuthPage() {
       const data = await response.json();
       setSecret(data.secret);
       
-      // Create otpauth URL manually to ensure proper encoding
       const otpauthUrl = `otpauth://totp/Gold%20Trading%20System:${encodeURIComponent(user?.email || '')}?secret=${data.secret}&issuer=Gold%20Trading%20System&algorithm=SHA1&digits=6&period=30`;
       
-      // Generate QR code URL usding Google Charts API
-      //const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(otpauthUrl)}`;
-      //setQrCodeUrl(qrUrl);
       setShowQRCode(true);
       toast.success('กรุณาคัดลอก และกรอกรหัสยืนยัน');
     } catch (error) {
@@ -104,13 +102,13 @@ export default function TwoFactorAuthPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium text-gray-900 mb-6 ${theme === 'dark' ? 'text-white' : ''}`}>
         ตั้งค่าการยืนยันตัวตนสองชั้น (2FA)
       </h1>
 
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-white' : ''}`}>
             <Key className="h-6 w-6 text-orange-500" />
             <span>การยืนยันตัวตนสองชั้น</span>
           </CardTitle>
@@ -119,10 +117,10 @@ export default function TwoFactorAuthPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-medium">
+                <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : ''}`}>
                   {is2FAEnabled ? 'เปิดใช้งาน 2FA แล้ว' : 'ยังไม่ได้เปิดใช้งาน 2FA'}
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                   การยืนยันตัวตนสองชั้นช่วยเพิ่มความปลอดภัยให้กับบัญชีของคุณ
                 </p>
               </div>
@@ -167,7 +165,7 @@ export default function TwoFactorAuthPage() {
 
             {showQRCode && (
               <div className="space-y-6">
-                <div className="border rounded-lg p-6 bg-gray-50">
+                <div className={`border rounded-lg p-6 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A]' : 'bg-gray-50'}`}>
                   <div className="flex flex-col items-center justify-center mb-4">
                     {qrCodeUrl && (
                       <Image
@@ -180,19 +178,19 @@ export default function TwoFactorAuthPage() {
                     )}
                     {secret && (
                       <div className="text-center">
-                        <p className="text-sm font-medium mb-2">รหัสลับสำหรับตั้งค่าด้วยตนเอง:</p>
-                        <code className="bg-gray-100 px-3 py-1 rounded text-sm">{secret}</code>
+                        <p className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-white' : ''}`}>รหัสลับสำหรับตั้งค่าด้วยตนเอง:</p>
+                        <code className={`px-3 py-1 rounded text-sm ${theme === 'dark' ? 'bg-[#252525] text-white' : 'bg-gray-100'}`}>{secret}</code>
                       </div>
                     )}
                   </div>
-                  <p className="text-sm text-center text-gray-500">
+                  <p className={`text-sm text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                     สแกน QR Code นี้ด้วยแอพ Authenticator เช่น Google Authenticator หรือ Microsoft Authenticator
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="verification-code">รหัสยืนยัน</Label>
+                    <Label htmlFor="verification-code" className={theme === 'dark' ? 'text-white' : ''}>รหัสยืนยัน</Label>
                     <Input
                       id="verification-code"
                       type="text"
@@ -200,6 +198,7 @@ export default function TwoFactorAuthPage() {
                       value={verificationCode}
                       onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       maxLength={6}
+                      className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
                     />
                   </div>
                   <Button
@@ -221,10 +220,10 @@ export default function TwoFactorAuthPage() {
             )}
 
             {is2FAEnabled && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-green-900/20 border border-green-900' : 'bg-green-50 border border-green-200'}`}>
                 <div className="flex items-center">
-                  <ShieldCheck className="h-5 w-5 text-green-500 mr-2" />
-                  <p className="text-green-700">
+                  <ShieldCheck className={`h-5 w-5 mr-2 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'}`} />
+                  <p className={theme === 'dark' ? 'text-green-400' : 'text-green-700'}>
                     การยืนยันตัวตนสองชั้นกำลังทำงาน บัญชีของคุณได้รับการป้องกันเพิ่มเติม
                   </p>
                 </div>

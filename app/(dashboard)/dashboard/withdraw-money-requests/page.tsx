@@ -6,6 +6,7 @@ import { ShieldAlert, BanknoteIcon, Loader2, CheckCircle, XCircle } from 'lucide
 import { useUser } from '@/lib/auth';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useTheme } from '@/lib/theme-provider';
 
 interface WithdrawalRequest {
   id: number;
@@ -35,6 +36,8 @@ export default function WithdrawMoneyRequestsPage() {
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchRequests();
@@ -83,11 +86,11 @@ export default function WithdrawMoneyRequestsPage() {
   if (!user || user.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
-        <Card>
+        <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-500 text-center max-w-md">
+            <h2 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Access Denied</h2>
+            <p className={`text-center max-w-md ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
               Only administrators have access to withdrawal requests management.
             </p>
           </CardContent>
@@ -98,15 +101,15 @@ export default function WithdrawMoneyRequestsPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
         ประวัติการขอถอนเงินทั้งหมด
       </h1>
 
-      <Card>
+      <Card className={isDark ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <BanknoteIcon className="h-6 w-6 text-orange-500" />
-            <span>Pending Withdrawals</span>
+            <span className={isDark ? 'text-white' : ''}>Pending Withdrawals</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -119,32 +122,42 @@ export default function WithdrawMoneyRequestsPage() {
               {requests.map((request) => (
                 <div
                   key={request.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50"
+                  className={`border rounded-lg p-4 ${
+                    isDark 
+                      ? 'bg-[#151515] border-[#2A2A2A] hover:bg-[#1a1a1a]' 
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-medium text-lg">{request.accountName}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className={`font-medium text-lg ${isDark ? 'text-white' : ''}`}>
+                        {request.accountName}
+                      </h3>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         Requested by: {request.user.email}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         Bank: {BANK_NAMES[request.bank]}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         Account: {request.accountNumber}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-lg text-orange-500">
+                      <p className={`font-medium text-lg text-orange-500`}>
                         ฿{Number(request.amount).toLocaleString()}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         {new Date(request.createdAt).toLocaleString('th-TH')}
                       </p>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs mt-2 ${
-                        request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        request.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
+                        request.status === 'approved' 
+                          ? 'bg-green-100 text-green-800' 
+                          : request.status === 'rejected' 
+                            ? 'bg-red-100 text-red-800' 
+                            : isDark 
+                              ? 'bg-yellow-900/30 text-yellow-200'
+                              : 'bg-yellow-100 text-yellow-800'
                       }`}>
                         {request.status.toUpperCase()}
                       </span>
@@ -156,7 +169,11 @@ export default function WithdrawMoneyRequestsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-red-600 border-red-600 hover:bg-red-50"
+                        className={`border-red-600 hover:bg-red-50 ${
+                          isDark 
+                            ? 'text-red-400 hover:bg-red-950/30' 
+                            : 'text-red-600'
+                        }`}
                         onClick={() => handleStatusUpdate(request.id, 'rejected')}
                         disabled={processingId === request.id}
                       >
@@ -171,7 +188,11 @@ export default function WithdrawMoneyRequestsPage() {
                       </Button>
                       <Button
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className={`${
+                          isDark 
+                            ? 'bg-green-700 hover:bg-green-600' 
+                            : 'bg-green-600 hover:bg-green-700'
+                        } text-white`}
                         onClick={() => handleStatusUpdate(request.id, 'approved')}
                         disabled={processingId === request.id}
                       >
@@ -190,7 +211,7 @@ export default function WithdrawMoneyRequestsPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
               No withdrawal requests yet
             </div>
           )}

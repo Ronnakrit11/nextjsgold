@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Lock, Trash2, Loader2 } from 'lucide-react';
 import { startTransition, useActionState } from 'react';
 import { updatePassword, deleteAccount } from '@/app/(login)/actions';
+import { useTheme } from '@/lib/theme-provider';
 
 type ActionState = {
   error?: string;
@@ -14,6 +15,7 @@ type ActionState = {
 };
 
 export default function SecurityPage() {
+  const { theme } = useTheme();
   const [passwordState, passwordAction, isPasswordPending] = useActionState<
     ActionState,
     FormData
@@ -28,13 +30,6 @@ export default function SecurityPage() {
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
-    // If you call the Server Action directly, it will automatically
-    // reset the form. We don't want that here, because we want to keep the
-    // client-side values in the inputs. So instead, we use an event handler
-    // which calls the action. You must wrap direct calls with startTranstion.
-    // When you use the `action` prop it automatically handles that for you.
-    // Another option here is to persist the values to local storage. I might
-    // explore alternative options.
     startTransition(() => {
       passwordAction(new FormData(event.currentTarget));
     });
@@ -51,17 +46,19 @@ export default function SecurityPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium bold text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         Security Settings
       </h1>
-      <Card className="mb-8">
+      <Card className={`mb-8 ${theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}`}>
         <CardHeader>
-          <CardTitle>Password</CardTitle>
+          <CardTitle className={theme === 'dark' ? 'text-white' : ''}>Password</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handlePasswordSubmit}>
             <div>
-              <Label htmlFor="current-password">Current Password</Label>
+              <Label htmlFor="current-password" className={theme === 'dark' ? 'text-white' : ''}>
+                Current Password
+              </Label>
               <Input
                 id="current-password"
                 name="currentPassword"
@@ -70,10 +67,13 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
+                className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
               />
             </div>
             <div>
-              <Label htmlFor="new-password">New Password</Label>
+              <Label htmlFor="new-password" className={theme === 'dark' ? 'text-white' : ''}>
+                New Password
+              </Label>
               <Input
                 id="new-password"
                 name="newPassword"
@@ -82,10 +82,13 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
+                className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
               />
             </div>
             <div>
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Label htmlFor="confirm-password" className={theme === 'dark' ? 'text-white' : ''}>
+                Confirm New Password
+              </Label>
               <Input
                 id="confirm-password"
                 name="confirmPassword"
@@ -93,6 +96,7 @@ export default function SecurityPage() {
                 required
                 minLength={8}
                 maxLength={100}
+                className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
               />
             </div>
             {passwordState.error && (
@@ -121,8 +125,6 @@ export default function SecurityPage() {
           </form>
         </CardContent>
       </Card>
-
-    
     </section>
   );
 }

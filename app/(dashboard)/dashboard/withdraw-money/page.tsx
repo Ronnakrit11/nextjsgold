@@ -8,6 +8,7 @@ import { Wallet, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useUser } from '@/lib/auth';
+import { useTheme } from '@/lib/theme-provider';
 
 interface BankAccount {
   bank: string;
@@ -25,6 +26,7 @@ const BANK_NAMES: { [key: string]: string } = {
 
 export default function WithdrawMoneyPage() {
   const { user } = useUser();
+  const { theme } = useTheme();
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState('');
   const [bankAccount, setBankAccount] = useState<BankAccount | null>(null);
@@ -127,14 +129,14 @@ export default function WithdrawMoneyPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         Withdraw Money
       </h1>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-white' : ''}`}>
               <Wallet className="h-6 w-6 text-orange-500" />
               <span>Withdraw Funds</span>
             </CardTitle>
@@ -142,7 +144,9 @@ export default function WithdrawMoneyPage() {
           <CardContent>
             {!bankAccount ? (
               <div className="text-center py-6">
-                <p className="text-gray-500 mb-4">Please set up your bank account information first</p>
+                <p className={`mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Please set up your bank account information first
+                </p>
                 <Button 
                   onClick={() => window.location.href = '/dashboard/general'}
                   className="bg-orange-500 hover:bg-orange-600 text-white"
@@ -152,22 +156,32 @@ export default function WithdrawMoneyPage() {
               </div>
             ) : (
               <form onSubmit={handleWithdraw} className="space-y-6">
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <p className="text-sm text-orange-800 font-medium mb-2">Bank Account Information</p>
+                <div className={`bg-orange-50 p-4 rounded-lg ${theme === 'dark' ? 'bg-[#1a1a1a]' : ''}`}>
+                  <p className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-orange-400' : 'text-orange-800'}`}>
+                    Bank Account Information
+                  </p>
                   <div className="space-y-1">
-                    <p className="text-sm text-gray-600">Bank: {BANK_NAMES[bankAccount.bank]}</p>
-                    <p className="text-sm text-gray-600">Account: {bankAccount.accountNumber}</p>
-                    <p className="text-sm text-gray-600">Name: {bankAccount.accountName}</p>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Bank: {BANK_NAMES[bankAccount.bank]}
+                    </p>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Account: {bankAccount.accountNumber}
+                    </p>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Name: {bankAccount.accountName}
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Available Balance</Label>
+                  <Label className={theme === 'dark' ? 'text-white' : ''}>Available Balance</Label>
                   <p className="text-2xl font-bold text-orange-500">฿{balance.toLocaleString()}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Withdrawal Amount (THB)</Label>
+                  <Label htmlFor="amount" className={theme === 'dark' ? 'text-white' : ''}>
+                    Withdrawal Amount (THB)
+                  </Label>
                   <Input
                     id="amount"
                     type="number"
@@ -182,7 +196,7 @@ export default function WithdrawMoneyPage() {
                     required
                     min="0"
                     max={balance}
-                    className="text-lg"
+                    className={`text-lg ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}`}
                   />
                 </div>
 

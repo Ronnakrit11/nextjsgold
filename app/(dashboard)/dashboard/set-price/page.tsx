@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
+import { useTheme } from '@/lib/theme-provider';
 
 interface MarkupSettings {
   gold_spot_bid: number;
@@ -21,6 +22,7 @@ interface MarkupSettings {
 }
 
 export default function SetPricePage() {
+  const { theme } = useTheme();
   const { user } = useUser();
   const [markupSettings, setMarkupSettings] = useState<MarkupSettings>({
     gold_spot_bid: 0,
@@ -57,11 +59,11 @@ export default function SetPricePage() {
   if (user.role !== 'admin') {
     return (
       <section className="flex-1 p-4 lg:p-8">
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ShieldAlert className="h-12 w-12 text-orange-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-500 text-center max-w-md">
+            <h2 className={`text-xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Access Denied</h2>
+            <p className={`text-center max-w-md ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
               Only administrators have access to the price settings. Please contact an administrator for assistance.
             </p>
           </CardContent>
@@ -115,14 +117,14 @@ export default function SetPricePage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         Set Price
       </h1>
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Tag className="h-6 w-6 text-orange-500" />
-            <span>Gold Price Settings</span>
+            <span className={theme === 'dark' ? 'text-white' : ''}>Gold Price Settings</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -130,7 +132,7 @@ export default function SetPricePage() {
             <div className="grid gap-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_spot_bid">Gold Spot Bid (%)</Label>
+                  <Label htmlFor="gold_spot_bid" className={theme === 'dark' ? 'text-white' : ''}>Gold Spot Bid (%)</Label>
                   <Input
                     id="gold_spot_bid"
                     name="gold_spot_bid"
@@ -139,11 +141,11 @@ export default function SetPricePage() {
                     value={markupSettings.gold_spot_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_spot_ask">Gold Spot Ask (%)</Label>
+                  <Label htmlFor="gold_spot_ask" className={theme === 'dark' ? 'text-white' : ''}>Gold Spot Ask (%)</Label>
                   <Input
                     id="gold_spot_ask"
                     name="gold_spot_ask"
@@ -152,14 +154,14 @@ export default function SetPricePage() {
                     value={markupSettings.gold_spot_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_9999_bid">Gold 99.99% Bid (%)</Label>
+                  <Label htmlFor="gold_9999_bid" className={theme === 'dark' ? 'text-white' : ''}>Gold 99.99% Bid (%)</Label>
                   <Input
                     id="gold_9999_bid"
                     name="gold_9999_bid"
@@ -168,11 +170,11 @@ export default function SetPricePage() {
                     value={markupSettings.gold_9999_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_9999_ask">Gold 99.99% Ask (%)</Label>
+                  <Label htmlFor="gold_9999_ask" className={theme === 'dark' ? 'text-white' : ''}>Gold 99.99% Ask (%)</Label>
                   <Input
                     id="gold_9999_ask"
                     name="gold_9999_ask"
@@ -181,14 +183,14 @@ export default function SetPricePage() {
                     value={markupSettings.gold_9999_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_965_bid">Gold 96.5% Bid (%)</Label>
+                  <Label htmlFor="gold_965_bid" className={theme === 'dark' ? 'text-white' : ''}>Gold 96.5% Bid (%)</Label>
                   <Input
                     id="gold_965_bid"
                     name="gold_965_bid"
@@ -197,11 +199,11 @@ export default function SetPricePage() {
                     value={markupSettings.gold_965_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_965_ask">Gold 96.5% Ask (%)</Label>
+                  <Label htmlFor="gold_965_ask" className={theme === 'dark' ? 'text-white' : ''}>Gold 96.5% Ask (%)</Label>
                   <Input
                     id="gold_965_ask"
                     name="gold_965_ask"
@@ -210,14 +212,14 @@ export default function SetPricePage() {
                     value={markupSettings.gold_965_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="gold_association_bid">Gold Association Bid (%)</Label>
+                  <Label htmlFor="gold_association_bid" className={theme === 'dark' ? 'text-white' : ''}>Gold Association Bid (%)</Label>
                   <Input
                     id="gold_association_bid"
                     name="gold_association_bid"
@@ -226,11 +228,11 @@ export default function SetPricePage() {
                     value={markupSettings.gold_association_bid}
                     onChange={handleInputChange}
                     placeholder="Enter bid markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gold_association_ask">Gold Association Ask (%)</Label>
+                  <Label htmlFor="gold_association_ask" className={theme === 'dark' ? 'text-white' : ''}>Gold Association Ask (%)</Label>
                   <Input
                     id="gold_association_ask"
                     name="gold_association_ask"
@@ -239,7 +241,7 @@ export default function SetPricePage() {
                     value={markupSettings.gold_association_ask}
                     onChange={handleInputChange}
                     placeholder="Enter ask markup percentage"
-                    className="mt-1"
+                    className={`mt-1 ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#333] text-white' : ''}`}
                   />
                 </div>
               </div>

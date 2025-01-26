@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ActivityType } from '@/lib/db/schema';
 import { getActivityLogs } from '@/lib/db/queries';
+import { useTheme } from '@/lib/theme-provider';
 
 const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.SIGN_UP]: UserPlus,
@@ -73,12 +74,12 @@ export default async function ActivityPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 dark:text-white mb-6">
         Activity Log
       </h1>
-      <Card>
+      <Card className="dark:bg-[#151515] dark:border-[#2A2A2A]">
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle className="dark:text-white">Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
           {logs.length > 0 ? (
@@ -91,15 +92,15 @@ export default async function ActivityPage() {
 
                 return (
                   <li key={log.id} className="flex items-center space-x-4">
-                    <div className="bg-orange-100 rounded-full p-2">
-                      <Icon className="w-5 h-5 text-orange-600" />
+                    <div className="bg-orange-100 dark:bg-orange-500/20 rounded-full p-2">
+                      <Icon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {formattedAction}
                         {log.ipAddress && ` from IP ${log.ipAddress}`}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {getRelativeTime(new Date(log.timestamp))}
                       </p>
                     </div>
@@ -110,10 +111,10 @@ export default async function ActivityPage() {
           ) : (
             <div className="flex flex-col items-center justify-center text-center py-12">
               <AlertCircle className="h-12 w-12 text-orange-500 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 No activity yet
               </h3>
-              <p className="text-sm text-gray-500 max-w-sm">
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
                 When you perform actions like signing in or updating your
                 account, they'll appear here.
               </p>

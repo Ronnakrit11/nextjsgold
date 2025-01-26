@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTheme } from '@/lib/theme-provider';
 
 type ActionState = {
   error?: string;
@@ -31,6 +32,7 @@ const BANK_OPTIONS = [
 
 export default function GeneralPage() {
   const { user } = useUser();
+  const { theme } = useTheme();
   const [accountState, accountAction, isAccountPending] = useActionState<ActionState, FormData>(
     updateAccount,
     { error: '', success: '' }
@@ -47,7 +49,6 @@ export default function GeneralPage() {
     accountName: ''
   });
 
-  // Add loading state
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -88,7 +89,6 @@ export default function GeneralPage() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     
-    // Update local state immediately
     const newBankData = {
       bank: formData.get('bank') as string,
       accountNumber: formData.get('bankAccountNo') as string,
@@ -104,29 +104,30 @@ export default function GeneralPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         General Settings
       </h1>
 
       <div className="space-y-6">
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
+            <CardTitle className={theme === 'dark' ? 'text-white' : ''}>Account Information</CardTitle>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={handleAccountSubmit}>
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name" className={theme === 'dark' ? 'text-white' : ''}>Name</Label>
                 <Input
                   id="name"
                   name="name"
                   placeholder="Enter your name"
                   defaultValue={user?.name || ''}
                   required
+                  className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className={theme === 'dark' ? 'text-white' : ''}>Email</Label>
                 <Input
                   id="email"
                   name="email"
@@ -134,6 +135,7 @@ export default function GeneralPage() {
                   placeholder="Enter your email"
                   defaultValue={user?.email || ''}
                   required
+                  className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
                 />
               </div>
               {accountState.error && (
@@ -160,9 +162,9 @@ export default function GeneralPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardHeader>
-            <CardTitle>Bank Account Information</CardTitle>
+            <CardTitle className={theme === 'dark' ? 'text-white' : ''}>Bank Account Information</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -172,19 +174,23 @@ export default function GeneralPage() {
             ) : (
               <form className="space-y-4" onSubmit={handleBankSubmit}>
                 <div>
-                  <Label htmlFor="bank">Bank</Label>
+                  <Label htmlFor="bank" className={theme === 'dark' ? 'text-white' : ''}>Bank</Label>
                   <Select 
                     name="bank" 
                     required 
                     value={bankAccount.bank}
                     onValueChange={(value) => setBankAccount(prev => ({ ...prev, bank: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}>
                       <SelectValue placeholder="Select your bank" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}>
                       {BANK_OPTIONS.map((bank) => (
-                        <SelectItem key={bank.value} value={bank.value}>
+                        <SelectItem 
+                          key={bank.value} 
+                          value={bank.value}
+                          className={theme === 'dark' ? 'text-white focus:bg-[#252525]' : ''}
+                        >
                           {bank.label}
                         </SelectItem>
                       ))}
@@ -192,7 +198,7 @@ export default function GeneralPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="bankAccountNo">Bank Account Number</Label>
+                  <Label htmlFor="bankAccountNo" className={theme === 'dark' ? 'text-white' : ''}>Bank Account Number</Label>
                   <Input
                     id="bankAccountNo"
                     name="bankAccountNo"
@@ -200,10 +206,11 @@ export default function GeneralPage() {
                     value={bankAccount.accountNumber}
                     onChange={(e) => setBankAccount(prev => ({ ...prev, accountNumber: e.target.value }))}
                     required
+                    className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="bankAccountName">Name of Bank Account</Label>
+                  <Label htmlFor="bankAccountName" className={theme === 'dark' ? 'text-white' : ''}>Name of Bank Account</Label>
                   <Input
                     id="bankAccountName"
                     name="bankAccountName"
@@ -211,6 +218,7 @@ export default function GeneralPage() {
                     value={bankAccount.accountName}
                     onChange={(e) => setBankAccount(prev => ({ ...prev, accountName: e.target.value }))}
                     required
+                    className={theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}
                   />
                 </div>
                 {bankState.error && (

@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useUser } from '@/lib/auth';
 import Image from 'next/image';
+import { useTheme } from '@/lib/theme-provider';
 
 interface VerifiedSlip {
   id: number;
@@ -32,6 +33,7 @@ const storePayload = (payload: string) => {
 
 export default function DepositPage() {
   const { user } = useUser();
+  const { theme } = useTheme();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -69,14 +71,12 @@ export default function DepositPage() {
       setIsVerifying(true);
       setIsProcessing(true);
 
-      // Read file as base64
       const fileReader = new FileReader();
       
       fileReader.onload = async () => {
         const base64Content = fileReader.result?.toString() || '';
         const usedPayloads = getStoredPayloads();
 
-        // Check if payload already exists
         if (usedPayloads.includes(base64Content)) {
           setIsVerifying(false);
           setIsProcessing(false);
@@ -84,7 +84,6 @@ export default function DepositPage() {
           return;
         }
 
-        // If payload is new, proceed with API call
         const formData = new FormData();
         formData.append('slip', selectedFile);
         formData.append('amount', amount);
@@ -106,7 +105,6 @@ export default function DepositPage() {
         }
 
         if (data.status === 200) {
-          // Store successful payload
           storePayload(base64Content);
           
           toast.success('ยืนยันสลิปสำเร็จ');
@@ -114,7 +112,6 @@ export default function DepositPage() {
           setSelectedMethod(null);
           setSelectedFile(null);
           
-          // Refresh recent deposits
           const recentResponse = await fetch('/api/deposits/recent');
           if (recentResponse.ok) {
             const recentData = await recentResponse.json();
@@ -138,12 +135,10 @@ export default function DepositPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      // Check file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error('ขนาดไฟล์ต้องไม่เกิน 10MB');
         return;
       }
-      // Check file type
       if (!file.type.startsWith('image/')) {
         toast.error('กรุณาอัพโหลดไฟล์รูปภาพเท่านั้น');
         return;
@@ -170,14 +165,14 @@ export default function DepositPage() {
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         Deposit Funds
       </h1>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className={`flex items-center space-x-2 ${theme === 'dark' ? 'text-white' : ''}`}>
               <Wallet className="h-6 w-6 text-orange-500" />
               <span>Make a Deposit</span>
             </CardTitle>
@@ -185,7 +180,7 @@ export default function DepositPage() {
           <CardContent>
             <form onSubmit={handleDeposit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (THB)</Label>
+                <Label htmlFor="amount" className={theme === 'dark' ? 'text-white' : ''}>Amount (THB)</Label>
                 <Input
                   id="amount"
                   name="amount"
@@ -196,12 +191,12 @@ export default function DepositPage() {
                   required
                   min="0"
                   step="0.01"
-                  className="text-lg"
+                  className={`text-lg ${theme === 'dark' ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white' : ''}`}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Select Payment Method</Label>
+                <Label className={theme === 'dark' ? 'text-white' : ''}>Select Payment Method</Label>
                 <div className="grid gap-4">
                   {paymentMethods.map((method) => (
                     <Button
@@ -209,7 +204,11 @@ export default function DepositPage() {
                       type="button"
                       variant={selectedMethod === method.id ? 'default' : 'outline'}
                       className={`w-full justify-start space-x-2 h-auto py-4 ${
-                        selectedMethod === method.id ? 'bg-orange-500 text-white hover:bg-orange-600' : ''
+                        selectedMethod === method.id 
+                          ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                          : theme === 'dark' 
+                            ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white hover:bg-[#202020]'
+                            : ''
                       }`}
                       onClick={() => setSelectedMethod(method.id)}
                     >
@@ -232,7 +231,7 @@ export default function DepositPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slip">Upload Transfer Slip</Label>
+                <Label htmlFor="slip" className={theme === 'dark' ? 'text-white' : ''}>Upload Transfer Slip</Label>
                 <div className="flex items-center gap-4">
                   <Input
                     id="slip"
@@ -245,7 +244,11 @@ export default function DepositPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full h-24 flex flex-col items-center justify-center border-dashed"
+                    className={`w-full h-24 flex flex-col items-center justify-center border-dashed ${
+                      theme === 'dark' 
+                        ? 'bg-[#1a1a1a] border-[#2A2A2A] text-white hover:bg-[#202020]'
+                        : ''
+                    }`}
                     onClick={() => document.getElementById('slip')?.click()}
                   >
                     <Upload className="h-6 w-6 mb-2" />
@@ -276,9 +279,9 @@ export default function DepositPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : ''}>
           <CardHeader>
-            <CardTitle>Recent Deposits</CardTitle>
+            <CardTitle className={theme === 'dark' ? 'text-white' : ''}>Recent Deposits</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -286,11 +289,19 @@ export default function DepositPage() {
                 recentDeposits.map((deposit) => (
                   <div
                     key={deposit.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className={`flex items-center justify-between p-4 border rounded-lg ${
+                      theme === 'dark' 
+                        ? 'bg-[#1a1a1a] border-[#2A2A2A]'
+                        : 'border-gray-200'
+                    }`}
                   >
                     <div>
-                      <p className="font-medium">{Number(deposit.amount).toLocaleString()} ฿</p>
-                      <p className="text-sm text-gray-500">{formatDate(deposit.verifiedAt)}</p>
+                      <p className={`font-medium ${theme === 'dark' ? 'text-white' : ''}`}>
+                        {Number(deposit.amount).toLocaleString()} ฿
+                      </p>
+                      <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {formatDate(deposit.verifiedAt)}
+                      </p>
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-sm ${
@@ -304,7 +315,9 @@ export default function DepositPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500">No recent deposits</p>
+                <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  No recent deposits
+                </p>
               )}
             </div>
           </CardContent>
