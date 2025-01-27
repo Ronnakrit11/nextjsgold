@@ -3,6 +3,7 @@ import { db } from '@/lib/db/drizzle';
 import { userBalances, goldAssets, transactions } from '@/lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
+import { sendGoldSaleNotification } from '@/lib/telegram/bot';
 
 export async function POST(request: Request) {
   try {
@@ -130,6 +131,21 @@ export async function POST(request: Request) {
       const remainingAmount = Number(newTotalGold.total || 0);
       const remainingTotalCost = Number(newTotalGold.totalCost || 0);
       const remainingAvgCost = Number(newTotalGold.avgCost || 0);
+
+      // Calculate profit/loss
+      const profitLoss = totalPrice - (Number(amount) * currentAvgCost);
+
+      // Send Telegram notification after transaction is complete
+      await Promise.allSettled([
+        sendGoldSaleNotification({
+          userName: user.name || user.email,
+          goldType,
+          amount: Number(amount),
+          totalPrice: Number(totalPrice),
+          pricePerUnit: Number(pricePerUnit),
+          profitLoss
+        })
+      ]);
 
       return {
         balance: newBalance.balance,

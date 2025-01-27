@@ -3,6 +3,7 @@ import { db } from '@/lib/db/drizzle';
 import { userBalances, goldAssets, transactions } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
+import { sendGoldPurchaseNotification } from '@/lib/telegram/bot';
 
 export async function POST(request: Request) {
   try {
@@ -66,6 +67,18 @@ export async function POST(request: Request) {
         goldAmount: newAsset.amount
       };
     });
+
+    // Send Telegram notification after transaction is complete
+    // Use Promise.allSettled to prevent notification errors from affecting the response
+    await Promise.allSettled([
+      sendGoldPurchaseNotification({
+        userName: user.name || user.email,
+        goldType,
+        amount: Number(amount),
+        totalPrice: Number(totalPrice),
+        pricePerUnit: Number(pricePerUnit)
+      })
+    ]);
 
     return NextResponse.json({
       success: true,
