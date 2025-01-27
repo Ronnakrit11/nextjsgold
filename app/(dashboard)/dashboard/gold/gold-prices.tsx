@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useTheme } from '@/lib/theme-provider';
+import { pusherClient } from '@/lib/pusher';
 
 interface GoldPrice {
   name: string;
@@ -63,8 +64,34 @@ export function GoldPrices() {
   const [isBuyProcessing, setIsBuyProcessing] = useState(false);
   const [isSellProcessing, setIsSellProcessing] = useState(false);
 
+  useEffect(() => {
+    // Initial fetch
+    fetchData();
+
+    // Subscribe to Pusher channel
+    const channel = pusherClient.subscribe('gold-prices');
+    channel.bind('price-update', (data: { prices: GoldPrice[] }) => {
+      setPrices(data.prices);
+      setLastUpdate(new Date());
+    });
+
+    // Cleanup
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, []);
+
   async function fetchData() {
     try {
+      // Fetch initial data
+      const response = await fetch('/api/gold');
+      if (response.ok) {
+        const data = await response.json();
+        setPrices(data);
+        setLastUpdate(new Date());
+      }
+      
       // Fetch user balance
       const balanceResponse = await fetch('/api/user/balance');
       const balanceData = await balanceResponse.json();
@@ -92,24 +119,12 @@ export function GoldPrices() {
       }, {});
       
       setAssets(Object.values(combinedAssets));
-
-      // Fetch gold prices
-      const pricesResponse = await fetch('/api/gold');
-      const pricesData = await pricesResponse.json();
-      setPrices(pricesData);
-      setLastUpdate(new Date());
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const getPortfolioSummary = (goldType: string) => {
     const asset = assets.find(a => a.goldType === goldType);

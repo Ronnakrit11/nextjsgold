@@ -1,49 +1,42 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { markupSettings } from '@/lib/db/schema';
+import { pusherServer } from '@/lib/pusher';
 
-export const dynamic = 'force-dynamic'; // Disable caching at the route level
-export const fetchCache = 'force-no-store'; // Disable fetch caching
-export const revalidate = 0; // Disable revalidation
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
-export async function GET() {
-  try {
-    // Fetch markup settings
-    const [settings] = await db
-      .select()
-      .from(markupSettings)
-      .orderBy(markupSettings.id)
-      .limit(1);
-
-    const response = await fetch('http://www.thaigold.info/RealTimeDataV2/gtdata_.txt', {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch gold prices');
+async function fetchGoldPrices() {
+  const response = await fetch('http://www.thaigold.info/RealTimeDataV2/gtdata_.txt', {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
     }
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch gold prices');
+  }
 
-    const text = await response.text();
-    const jsonStr = `[${text.split('[')[1].split(']')[0]}]`;
-    const data = JSON.parse(jsonStr);
+  const text = await response.text();
+  const jsonStr = `[${text.split('[')[1].split(']')[0]}]`;
+  return JSON.parse(jsonStr);
+}
 
-    // Filter out unwanted gold types
-    const filteredData = data.filter((item: any) => {
+async function processGoldPrices(data: any[], settings: any) {
+  return data
+    .filter((item: any) => {
       const unwantedTypes = [
         'GFG25', 'GFJ25', 'GFM25', 'SVG25', 'SVJ25', 'SVM25',
         'GFPTM23-curr', 'GF10M23-curr', 'GF10Q23-curr', 'GF10V23-curr',
         'GFM23-curr', 'GFQ23-curr', 'GFV23-curr', 'SVFM23-curr', 'SVFU23-curr','Update'
       ];
       return !unwantedTypes.includes(item.name);
-    });
-
-    // Apply markup percentages if settings exist
-    if (settings) {
-      return new NextResponse(JSON.stringify(filteredData.map((item: any) => {
+    })
+    .map((item: any) => {
+      if (settings) {
         switch (item.name) {
           case 'GoldSpot':
             return {
@@ -72,16 +65,28 @@ export async function GET() {
           default:
             return item;
         }
-      })), {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        },
-      });
-    }
+      }
+      return item;
+    });
+}
 
-    return new NextResponse(JSON.stringify(filteredData), {
+export async function GET() {
+  try {
+    const [settings] = await db
+      .select()
+      .from(markupSettings)
+      .orderBy(markupSettings.id)
+      .limit(1);
+
+    const data = await fetchGoldPrices();
+    const processedData = await processGoldPrices(data, settings);
+
+    // Broadcast the updated prices via Pusher
+    await pusherServer.trigger('gold-prices', 'price-update', {
+      prices: processedData
+    });
+
+    return new NextResponse(JSON.stringify(processedData), {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Pragma': 'no-cache',
