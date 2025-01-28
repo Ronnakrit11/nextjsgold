@@ -6,8 +6,8 @@ import { getUser } from '@/lib/db/queries';
 import { ThemeProvider } from '@/lib/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'Next.js Gold Saving',
-  description: 'Get started quickly with Us',
+  title: 'Aurienn Demo Gold Trading',
+  description: 'Demo Gold Trading and Saving',
 };
 
 export const viewport: Viewport = {
