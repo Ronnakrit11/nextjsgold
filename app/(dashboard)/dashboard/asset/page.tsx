@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart2, Wallet, PieChart } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { AssetSkeleton } from '@/components/AssetSkeleton';
 import { useTheme } from '@/lib/theme-provider';
 
@@ -21,59 +21,35 @@ interface GoldPrice {
   diff: string | number;
 }
 
+interface AssetData {
+  balance: string;
+  assets: GoldAsset[];
+}
+
 export default function AssetPage() {
   const { theme } = useTheme();
-  const [balance, setBalance] = useState(0);
-  const [assets, setAssets] = useState<GoldAsset[]>([]);
+  const [assetData, setAssetData] = useState<AssetData | null>(null);
   const [prices, setPrices] = useState<GoldPrice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch user balance
-        const balanceResponse = await fetch('/api/user/balance');
-        const balanceData = await balanceResponse.json();
-        setBalance(Number(balanceData.balance));
+        // Fetch asset data and prices in parallel
+        const [assetResponse, pricesResponse] = await Promise.all([
+          fetch('/api/asset-data'),
+          fetch('/api/gold')
+        ]);
 
-        // Fetch gold assets directly from gold_assets table
-        const assetsResponse = await fetch('/api/gold-assets');
-        const goldAssets = await assetsResponse.json();
-        
-        // Combine assets of the same type and calculate weighted average purchase price
-        const combinedAssets = goldAssets.reduce((acc: { [key: string]: any }, asset: any) => {
-          const amount = Number(asset.amount);
-          if (amount <= 0.0001) return acc;
+        if (assetResponse.ok && pricesResponse.ok) {
+          const [assetData, pricesData] = await Promise.all([
+            assetResponse.json(),
+            pricesResponse.json()
+          ]);
 
-          if (!acc[asset.goldType]) {
-            acc[asset.goldType] = {
-              goldType: asset.goldType,
-              amount: amount,
-              totalValue: amount * Number(asset.purchasePrice),
-              purchasePrice: Number(asset.purchasePrice)
-            };
-          } else {
-            acc[asset.goldType].amount += amount;
-            acc[asset.goldType].totalValue += amount * Number(asset.purchasePrice);
-          }
-          return acc;
-        }, {});
-
-        // Convert combined assets to array format with average purchase price
-        const formattedAssets = Object.values(combinedAssets).map((asset: any) => ({
-          goldType: asset.goldType,
-          amount: asset.amount.toString(),
-          purchasePrice: (asset.totalValue / asset.amount).toString(),
-          totalCost: asset.totalValue.toString(),
-          averageCost: (asset.totalValue / asset.amount).toString()
-        }));
-
-        setAssets(formattedAssets);
-
-        // Fetch gold prices
-        const pricesResponse = await fetch('/api/gold');
-        const pricesData = await pricesResponse.json();
-        setPrices(pricesData);
+          setAssetData(assetData);
+          setPrices(pricesData);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -84,34 +60,42 @@ export default function AssetPage() {
     fetchData();
   }, []);
 
-  const getBuybackPrice = (goldType: string) => {
+  const getBuybackPrice = useMemo(() => {
     const priceMap: Record<string, string> = {
       'ทองสมาคม': 'สมาคมฯ',
       'ทอง 99.99%': '99.99%',
       'ทอง 96.5%': '96.5%'
     };
     
-    const price = prices.find(p => p.name === priceMap[goldType]);
-    return price ? Number(price.bid) : 0;
-  };
+    return (goldType: string) => {
+      const price = prices.find(p => p.name === priceMap[goldType]);
+      return price ? Number(price.bid) : 0;
+    };
+  }, [prices]);
 
-  const calculateTotalValue = () => {
-    return assets.reduce((total, asset) => {
+  const totalAssetValue = useMemo(() => {
+    if (!assetData?.assets) return 0;
+    return assetData.assets.reduce((total, asset) => {
       const buybackPrice = getBuybackPrice(asset.goldType);
       return total + (Number(asset.amount) * buybackPrice);
     }, 0);
-  };
+  }, [assetData?.assets, getBuybackPrice]);
 
-  const totalAssetValue = calculateTotalValue();
-  const totalAccountValue = totalAssetValue + balance;
+  const totalAccountValue = useMemo(() => {
+    return totalAssetValue + (assetData ? Number(assetData.balance) : 0);
+  }, [totalAssetValue, assetData]);
 
   if (loading) {
     return <AssetSkeleton />;
   }
 
+  if (!assetData) {
+    return <div>Error loading asset data</div>;
+  }
+
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 dark:text-white mb-6">
+      <h1 className={`text-lg lg:text-2xl font-medium mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
         Asset Overview
       </h1>
       
@@ -147,7 +131,7 @@ export default function AssetPage() {
           <CardContent>
             <div className="mt-2">
               <p className="text-xl font-bold text-orange-500">
-                {balance.toLocaleString()} ฿
+                {Number(assetData.balance).toLocaleString()} ฿
               </p>
               <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                 Total Available Balance
@@ -181,9 +165,9 @@ export default function AssetPage() {
           <CardTitle className={theme === 'dark' ? 'text-white' : ''}>Asset Holdings</CardTitle>
         </CardHeader>
         <CardContent>
-          {assets.length > 0 ? (
+          {assetData.assets.length > 0 ? (
             <div className="space-y-4">
-              {assets.map((asset, index) => {
+              {assetData.assets.map((asset, index) => {
                 const buybackPrice = getBuybackPrice(asset.goldType);
                 const currentValue = Number(asset.amount) * buybackPrice;
                 const purchaseValue = Number(asset.totalCost);
