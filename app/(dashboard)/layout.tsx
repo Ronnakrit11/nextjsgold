@@ -35,7 +35,7 @@ function Header() {
     <header className={`border-b ${isDark ? 'bg-[#121212] border-[#2A2A2A]' : 'bg-white border-gray-200'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <Image src="/Ar-logo2.png" alt="Logo" width={180} height={150} className="h-12 w-auto" />
+          <Image src="/Ar-logo2.png" alt="Logo" width={180} height={180} className="h-12 w-auto" />
           <span className={`ml-2 text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}></span>
         </Link>
         <div className="flex items-center space-x-4">
@@ -55,7 +55,7 @@ function Header() {
               <DropdownMenuContent align="end" className={`flex flex-col gap-1 ${isDark ? 'bg-[#151515] border-[#2A2A2A] text-white' : ''}`}>
                 <DropdownMenuItem className="cursor-pointer">
                   <Link href="/dashboard/gold" className="flex w-full items-center">
-                    <Image src="/Ar-logo2.png" alt="Logo" width={60} height={40} className="mr-2 h-4 w-4" />
+                    <Image src="/Ar-logo2.png" alt="Logo" width={180} height={180} className="mr-2 h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
                 </DropdownMenuItem>
