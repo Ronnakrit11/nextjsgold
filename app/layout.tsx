@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/lib/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Aurienn Demo Gold Trading',
-  description: 'Demo Gold Trading and Saving',
+  description: 'Demo Gold Trading and Saving ',
 };
 
 export const viewport: Viewport = {
