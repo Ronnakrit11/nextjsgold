@@ -148,16 +148,16 @@ export function GoldPrices() {
 
   const handleBuySubmit = async () => {
     if (!selectedPrice || !moneyAmount) return;
-
+  
     const moneyNum = parseFloat(moneyAmount);
     
     if (moneyNum > balance) {
       toast.error('จำนวนเงินเกินยอดคงเหลือในบัญชี');
       return;
     }
-
+  
     setIsBuyProcessing(true);
-
+  
     try {
       const pricePerUnit = typeof selectedPrice.ask === 'string' ? 
         parseFloat(selectedPrice.ask) : selectedPrice.ask;
@@ -168,25 +168,26 @@ export function GoldPrices() {
                       selectedPrice.name === '99.99%' ? 'ทอง 99.99%' :
                       selectedPrice.name === '96.5%' ? 'ทอง 96.5%' :
                       'ทองสมาคม';
-
-      const response = await fetch('/api/transactions/buy', {
+  
+      const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           goldType,
           amount: units,
           pricePerUnit,
-          totalPrice: moneyNum
+          totalPrice: moneyNum,
+          type: 'buy'
         })
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to process purchase');
       }
-
+  
       const data = await response.json();
       setBalance(data.balance);
-      await fetchData();
+      await fetchData(); // Refresh data
       
       setTransactionSummary({
         goldType,
@@ -206,49 +207,43 @@ export function GoldPrices() {
       setIsBuyProcessing(false);
     }
   };
-
+  
   const handleSellSubmit = async () => {
     if (!selectedPrice || !sellUnits) return;
-
+  
     setIsSellProcessing(true);
-
+  
     try {
       const units = parseFloat(sellUnits);
       const pricePerUnit = typeof selectedPrice.bid === 'string' ? 
         parseFloat(selectedPrice.bid) : selectedPrice.bid;
       const totalAmount = units * pricePerUnit;
-
+  
       const goldType = selectedPrice.name === 'GoldSpot' ? 'GoldSpot' :
                       selectedPrice.name === '99.99%' ? 'ทอง 99.99%' :
                       selectedPrice.name === '96.5%' ? 'ทอง 96.5%' :
                       'ทองสมาคม';
-
-      // Check if user has enough units to sell
-      const currentAsset = assets.find(a => a.goldType === goldType);
-      if (!currentAsset || Number(currentAsset.amount) < units) {
-        toast.error('จำนวนทองไม่เพียงพอ');
-        return;
-      }
-
-      const response = await fetch('/api/transactions/sell', {
+  
+      const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           goldType,
           amount: units,
           pricePerUnit,
-          totalPrice: totalAmount
+          totalPrice: totalAmount,
+          type: 'sell'
         })
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to process sale');
       }
-
+  
       const data = await response.json();
       setBalance(data.balance);
-      await fetchData();
-
+      await fetchData(); // Refresh data
+  
       setTransactionSummary({
         goldType,
         units,
@@ -260,7 +255,7 @@ export function GoldPrices() {
         previousAvgCost: data.previousAvgCost,
         previousTotalCost: data.previousTotalCost
       });
-
+  
       setIsSellDialogOpen(false);
       setShowSummaryDialog(true);
       toast.success('ขายทองสำเร็จ');
