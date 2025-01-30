@@ -268,18 +268,21 @@ export function GoldPrices() {
 
   return (
     <div className="space-y-4">
-      <Card className={`${theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : 'bg-white'}`}>
-        <CardContent className="p-6">
-          <div className="text-gray-900">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm opacity-80">เงินสดในพอร์ต</p>
-                <p className="text-3xl font-bold">฿{balance.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      
+
+<Card className={`${theme === 'dark' ? 'bg-[#151515] border-[#2A2A2A]' : 'bg-white'}`}>
+  <CardContent className="p-6">
+    <div className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="text-sm opacity-80">เงินสดในพอร์ต</p>
+          <p className="text-3xl font-bold">฿{balance.toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
 
       <div className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} text-sm -mt-2 mb-2`}>
         อัพเดทล่าสุด: {lastUpdate.toLocaleString('th-TH')}
