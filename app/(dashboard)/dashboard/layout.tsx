@@ -63,6 +63,10 @@ export default function DashboardLayout({
     setAdminNavItems(isAdmin ? adminItems : []);
   }, [user]);
 
+  const handleLinkClick = () => {
+    setIsSidebarOpen(false);
+  };
+
   return (
     <div className={`flex flex-col min-h-screen w-full ${isDark ? 'bg-[#0A0A0A]' : 'bg-[#F8FAFC]'}`}>
       {/* Top Navigation */}
@@ -123,7 +127,7 @@ export default function DashboardLayout({
               General
             </h2>
             {generalNavItems.map((item) => (
-              <Link key={item.href} href={item.href}>
+              <Link key={item.href} href={item.href} onClick={handleLinkClick}>
                 <Button
                   variant="ghost"
                   className={`w-full justify-start ${
@@ -150,7 +154,7 @@ export default function DashboardLayout({
                 Admin
               </h2>
               {adminNavItems.map((item) => (
-                <Link key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href} onClick={handleLinkClick}>
                   <Button
                     variant="ghost"
                     className={`w-full justify-start ${
