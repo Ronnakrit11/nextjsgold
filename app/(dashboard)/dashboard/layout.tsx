@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon, Moon, Sun } from 'lucide-react';
@@ -63,121 +64,131 @@ export default function DashboardLayout({
   }, [user]);
 
   return (
-    <div className={`flex flex-col min-h-screen w-full ${isDark ? 'bg-[#121212]' : 'bg-white'}`}>
-      {/* Mobile header */}
-      <div className={`lg:hidden flex items-center justify-between ${isDark ? 'bg-[#151515] border-[#2A2A2A]' : 'bg-white border-gray-200'} border-b p-4`}>
-        <div className="flex items-center">
-          <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Settings</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className={isDark ? 'text-white' : 'text-gray-900'}
-          >
-            {isDark ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={isDark ? 'text-white' : 'text-gray-900'}
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-1 h-full">
-        {/* Sidebar */}
-        <aside
-          className={`w-56 lg:w-64 ${
-            isDark ? 'bg-[#121212] border-[#2A2A2A]' : 'bg-gray-50 border-gray-200'
-          } border-r flex-shrink-0 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } fixed lg:relative inset-y-0 left-0 z-50 h-full`}
-        >
-          <nav className="h-full overflow-y-auto p-4">
-            {/* Theme Toggle (Desktop) */}
-            <div className="hidden lg:flex justify-end mb-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                className={`${isDark ? 'text-white hover:text-gray-300' : 'text-gray-900 hover:text-gray-600'}`}
-              >
-                {isDark ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
+    <div className={`flex flex-col min-h-screen w-full ${isDark ? 'bg-[#0A0A0A]' : 'bg-[#F8FAFC]'}`}>
+      {/* Top Navigation */}
+      <header className={`lg:pl-72 fixed w-full z-50 ${isDark ? 'bg-[#111111]/80 border-[#222222]' : 'bg-white/80 border-gray-200'} border-b backdrop-blur-sm`}>
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className={`lg:hidden ${isDark ? 'text-white' : 'text-gray-700'}`}
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className={isDark ? 'text-white' : 'text-gray-700'}
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+            
+            <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-700'}`}>
+              {user?.email}
             </div>
+          </div>
+        </div>
+      </header>
 
-            {/* General Menu Items */}
-            <div className="mb-6">
-              <h2 className={`px-2 mb-2 text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>GENERAL</h2>
-              {generalNavItems.map((item) => (
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${isDark ? 'bg-[#111111] border-[#222222]' : 'bg-white border-gray-200'} border-r`}
+      >
+        <div className="flex h-16 items-center gap-2 border-b px-6 py-4 ${isDark ? 'border-[#222222]' : 'border-gray-200'}">
+          <Image
+            src="/Ar-logo2.png"
+            alt="Logo"
+            width={140}
+            height={40}
+            className="h-8 w-auto"
+          />
+        </div>
+
+        <nav className="flex flex-col gap-1 p-4">
+          {/* General Menu Items */}
+          <div className="space-y-1">
+            <h2 className={`px-2 py-2 text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>
+              General
+            </h2>
+            {generalNavItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start ${
+                    pathname === item.href
+                      ? isDark
+                        ? 'bg-white/10 text-white'
+                        : 'bg-gray-100 text-gray-900'
+                      : isDark
+                      ? 'text-gray-400 hover:bg-white/5 hover:text-white'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } transition-colors`}
+                >
+                  <item.icon className="mr-3 h-4 w-4" />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </Button>
+              </Link>
+            ))}
+          </div>
+
+          {/* Admin Menu Items */}
+          {adminNavItems.length > 0 && (
+            <div className="space-y-1 mt-6">
+              <h2 className={`px-2 py-2 text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>
+                Admin
+              </h2>
+              {adminNavItems.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <Button
-                    variant={pathname === item.href ? 'secondary' : 'ghost'}
-                    className={`my-1 w-full justify-start ${
-                      isDark
-                        ? `text-gray-300 hover:text-white hover:bg-gray-800 ${pathname === item.href ? 'bg-gray-800 text-white' : ''}`
-                        : `text-gray-600 hover:text-gray-900 hover:bg-gray-200 ${pathname === item.href ? 'bg-gray-200 text-gray-900' : ''}`
-                    }`}
-                    onClick={() => setIsSidebarOpen(false)}
+                    variant="ghost"
+                    className={`w-full justify-start ${
+                      pathname === item.href
+                        ? isDark
+                          ? 'bg-white/10 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        : isDark
+                        ? 'text-gray-400 hover:bg-white/5 hover:text-white'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    } transition-colors`}
                   >
-                    <item.icon className="mr-2 h-4 w-4" />
-                    {item.label}
+                    <item.icon className="mr-3 h-4 w-4" />
+                    <span className="text-sm font-medium">{item.label}</span>
                   </Button>
                 </Link>
               ))}
             </div>
+          )}
+        </nav>
+      </aside>
 
-            {/* Admin Menu Items */}
-            {adminNavItems.length > 0 && (
-              <div>
-                <h2 className={`px-2 mb-2 text-sm font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>ADMIN</h2>
-                {adminNavItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <Button
-                      variant={pathname === item.href ? 'secondary' : 'ghost'}
-                      className={`my-1 w-full justify-start ${
-                        isDark
-                          ? `text-gray-300 hover:text-white hover:bg-gray-800 ${pathname === item.href ? 'bg-gray-800 text-white' : ''}`
-                          : `text-gray-600 hover:text-gray-900 hover:bg-gray-200 ${pathname === item.href ? 'bg-gray-200 text-gray-900' : ''}`
-                      }`}
-                      onClick={() => setIsSidebarOpen(false)}
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </nav>
-        </aside>
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-        {/* Overlay for mobile */}
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main content */}
-        <main className={`flex-1 overflow-y-auto p-4 ${isDark ? 'bg-[#121212]' : 'bg-white'}`}>
+      {/* Main Content */}
+      <main className={`flex-1 lg:pl-72 pt-16`}>
+        <div className="px-4 py-4 sm:px-6 lg:px-8">
           {children}
-        </main>
-        <SocialContacts/>
-      </div>
+        </div>
+      </main>
+      
+      <SocialContacts />
     </div>
   );
 }
