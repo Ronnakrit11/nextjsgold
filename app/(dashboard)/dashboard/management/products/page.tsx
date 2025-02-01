@@ -23,15 +23,15 @@ interface Product {
   code: string;
   name: string;
   description: string | null;
-  weight: number;
-  weightUnit: 'gram' | 'baht';
-  purity: number;
-  sellingPrice: number;
-  workmanshipFee: number;
+  weight: string;
+  weightUnit: string;
+  purity: string;
+  sellingPrice: string;
+  workmanshipFee: string;
   imageUrl: string | null;
-  status: 'active' | 'inactive';
-  createdAt: Date;
-  updatedAt: Date;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function ProductsPage() {
@@ -88,22 +88,25 @@ export default function ProductsPage() {
         getCategories()
       ]);
       
+      // Filter to show only active products
+      const activeProducts = productsData.filter(product => product.status === 'active');
+      
       // Convert the raw data to match our Product interface
-      const formattedProducts: Product[] = productsData.map(product => ({
+      const formattedProducts: Product[] = activeProducts.map(product => ({
         id: product.id,
         categoryId: product.categoryId,
         code: product.code,
         name: product.name,
-        description: product.description || '',
-        weight: Number(product.weight),
-        weightUnit: product.weightUnit as 'gram' | 'baht',
-        purity: Number(product.purity),
-        sellingPrice: Number(product.sellingPrice),
-        workmanshipFee: Number(product.workmanshipFee),
+        description: product.description,
+        weight: String(product.weight),
+        weightUnit: product.weightUnit,
+        purity: String(product.purity),
+        sellingPrice: String(product.sellingPrice),
+        workmanshipFee: String(product.workmanshipFee),
         imageUrl: product.imageUrl,
-        status: product.status as 'active' | 'inactive',
-        createdAt: new Date(product.createdAt),
-        updatedAt: new Date(product.updatedAt)
+        status: product.status,
+        createdAt: new Date(product.createdAt).toISOString(),
+        updatedAt: new Date(product.updatedAt).toISOString()
       }));
 
       setProducts(formattedProducts);
@@ -221,9 +224,22 @@ export default function ProductsPage() {
                   <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     {product.weight} {product.weightUnit} | {product.purity}% purity
                   </p>
-                  <p className="text-orange-500 font-medium mt-2">
-                    ฿{Number(product.sellingPrice).toLocaleString()}
-                  </p>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>ราคาสินค้า:</span>
+                      <span className="font-medium">฿{Number(product.sellingPrice).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>ค่ากำเหน็จ:</span>
+                      <span className="font-medium">฿{Number(product.workmanshipFee).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
+                      <span className={`text-sm font-medium ${isDark ? 'text-white' : ''}`}>ราคารวม:</span>
+                      <span className="font-bold text-orange-500">
+                        ฿{(Number(product.sellingPrice) + Number(product.workmanshipFee)).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
                   <div className="flex gap-2 mt-4">
                     <Button
                       variant="outline"
@@ -234,11 +250,11 @@ export default function ProductsPage() {
                           categoryId: product.categoryId?.toString() || '',
                           name: product.name,
                           description: product.description || '',
-                          weight: product.weight.toString(),
+                          weight: product.weight,
                           weightUnit: product.weightUnit,
-                          purity: product.purity.toString(),
-                          sellingPrice: product.sellingPrice.toString(),
-                          workmanshipFee: product.workmanshipFee.toString(),
+                          purity: product.purity,
+                          sellingPrice: product.sellingPrice,
+                          workmanshipFee: product.workmanshipFee,
                           imageUrl: product.imageUrl || '',
                         });
                         setIsDialogOpen(true);
