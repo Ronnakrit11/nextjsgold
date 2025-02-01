@@ -9,6 +9,7 @@ import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, Bar
 import { useUser } from '@/lib/auth';
 import { SocialContacts } from '@/components/SocialContacts';
 import { useTheme } from '@/lib/theme-provider';
+import { signOut } from '@/app/(login)/actions';
 
 export default function DashboardLayout({
   children,
@@ -70,7 +71,6 @@ export default function DashboardLayout({
       { href: '/dashboard/management/catalog', icon: BookOpen, label: 'แคตตาล็อก' },
     ];
 
-    // Only set general nav items for non-admin users
     setGeneralNavItems(isAdmin ? [] : baseItems);
     setAdminNavItems(isAdmin ? adminItems : []);
     setManagementNavItems(isAdmin ? managementItems : []);
@@ -113,6 +113,18 @@ export default function DashboardLayout({
             <div className={`text-sm ${isDark ? 'text-white' : 'text-gray-700'}`}>
               {user?.email}
             </div>
+
+            <form action={signOut}>
+              <Button 
+                type="submit"
+                variant="outline"
+                size="sm"
+                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </Button>
+            </form>
           </div>
         </div>
       </header>
