@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon, Moon, Sun, Package, BookOpen } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon, Moon, Sun, Package, BookOpen, ShoppingBag } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 import { SocialContacts } from '@/components/SocialContacts';
 import { useTheme } from '@/lib/theme-provider';
@@ -42,6 +42,7 @@ export default function DashboardLayout({
     
     const baseItems = [
       { href: '/dashboard/gold', icon: Coins, label: 'ซื้อขายทอง' },
+      { href: '/dashboard/gold-jewelry', icon: ShoppingBag, label: 'ซื้อทองรูปพรรณ' },
       { href: '/dashboard/asset', icon: BarChart2, label: 'สินทรัพย์ทั้งหมด' },
       { href: '/dashboard/transaction', icon: FileText, label: 'รายการซื้อขายทอง' },
       { href: '/dashboard/deposit', icon: Wallet, label: 'ฝากเงิน' },
