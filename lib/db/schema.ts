@@ -1,3 +1,4 @@
+// Add these imports at the top of the file
 import {
   pgTable,
   serial,
@@ -349,3 +350,52 @@ export const withdrawalMoneyRequestsRelations = relations(withdrawalMoneyRequest
 // Add to your existing types
 export type WithdrawalMoneyRequest = typeof withdrawalMoneyRequests.$inferSelect;
 export type NewWithdrawalMoneyRequest = typeof withdrawalMoneyRequests.$inferInsert;
+
+
+
+
+// Add the product tables to the schema
+export const productCategories = pgTable('product_categories', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const goldProducts = pgTable('gold_products', {
+  id: serial('id').primaryKey(),
+  categoryId: integer('category_id').references(() => productCategories.id),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  weight: decimal('weight').notNull(),
+  weightUnit: varchar('weight_unit', { length: 10 }).notNull(),
+  purity: decimal('purity').notNull(),
+  sellingPrice: decimal('selling_price').notNull(),
+  workmanshipFee: decimal('workmanship_fee').notNull(),
+  imageUrl: text('image_url'),
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Add relations
+export const productCategoriesRelations = relations(productCategories, ({ many }) => ({
+  products: many(goldProducts),
+}));
+
+export const goldProductsRelations = relations(goldProducts, ({ one }) => ({
+  category: one(productCategories, {
+    fields: [goldProducts.categoryId],
+    references: [productCategories.id],
+  }),
+}));
+
+// Add types
+export type ProductCategory = typeof productCategories.$inferSelect;
+export type NewProductCategory = typeof productCategories.$inferInsert;
+export type GoldProduct = typeof goldProducts.$inferSelect;
+export type NewGoldProduct = typeof goldProducts.$inferInsert;
+
+// Keep all existing code below this point...

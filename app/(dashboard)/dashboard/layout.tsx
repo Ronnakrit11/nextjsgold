@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon, Moon, Sun } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon, Moon, Sun, Package, BookOpen } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 import { SocialContacts } from '@/components/SocialContacts';
 import { useTheme } from '@/lib/theme-provider';
@@ -25,6 +25,11 @@ export default function DashboardLayout({
     label: string;
   }>>([]);
   const [adminNavItems, setAdminNavItems] = useState<Array<{
+    href: string;
+    icon: any;
+    label: string;
+  }>>([]);
+  const [managementNavItems, setManagementNavItems] = useState<Array<{
     href: string;
     icon: any;
     label: string;
@@ -59,8 +64,15 @@ export default function DashboardLayout({
       { href: '/dashboard/admin', icon: Shield, label: 'จัดการเเอดมิน' },
     ];
 
-    setGeneralNavItems(baseItems);
+    const managementItems = [
+      { href: '/dashboard/management/products', icon: Package, label: 'จัดการสินค้า' },
+      { href: '/dashboard/management/catalog', icon: BookOpen, label: 'แคตตาล็อก' },
+    ];
+
+    // Only set general nav items for non-admin users
+    setGeneralNavItems(isAdmin ? [] : baseItems);
     setAdminNavItems(isAdmin ? adminItems : []);
+    setManagementNavItems(isAdmin ? managementItems : []);
   }, [user]);
 
   const handleLinkClick = () => {
@@ -122,30 +134,60 @@ export default function DashboardLayout({
 
         <nav className="flex-1 overflow-y-auto p-4">
           {/* General Menu Items */}
-          <div className="space-y-1">
-            <h2 className={`px-2 py-2 text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>
-              General
-            </h2>
-            {generalNavItems.map((item) => (
-              <Link key={item.href} href={item.href} onClick={handleLinkClick}>
-                <Button
-                  variant="ghost"
-                  className={`w-full justify-start ${
-                    pathname === item.href
-                      ? isDark
-                        ? 'bg-white/10 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                      : isDark
-                      ? 'text-gray-400 hover:bg-white/5 hover:text-white'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  } transition-colors`}
-                >
-                  <item.icon className="mr-3 h-4 w-4" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </Button>
-              </Link>
-            ))}
-          </div>
+          {generalNavItems.length > 0 && (
+            <div className="space-y-1">
+              <h2 className={`px-2 py-2 text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>
+                General
+              </h2>
+              {generalNavItems.map((item) => (
+                <Link key={item.href} href={item.href} onClick={handleLinkClick}>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start ${
+                      pathname === item.href
+                        ? isDark
+                          ? 'bg-white/10 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        : isDark
+                        ? 'text-gray-400 hover:bg-white/5 hover:text-white'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    } transition-colors`}
+                  >
+                    <item.icon className="mr-3 h-4 w-4" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Management Menu Items */}
+          {managementNavItems.length > 0 && (
+            <div className="space-y-1 mt-6">
+              <h2 className={`px-2 py-2 text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'} uppercase tracking-wider`}>
+                Management
+              </h2>
+              {managementNavItems.map((item) => (
+                <Link key={item.href} href={item.href} onClick={handleLinkClick}>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start ${
+                      pathname === item.href
+                        ? isDark
+                          ? 'bg-white/10 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        : isDark
+                        ? 'text-gray-400 hover:bg-white/5 hover:text-white'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    } transition-colors`}
+                  >
+                    <item.icon className="mr-3 h-4 w-4" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          )}
 
           {/* Admin Menu Items */}
           {adminNavItems.length > 0 && (
