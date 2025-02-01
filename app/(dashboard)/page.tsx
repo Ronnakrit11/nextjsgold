@@ -76,7 +76,7 @@ export default function HomePage() {
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                   and Drizzle OR
+                   and Drizzle ORM
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
                   Robust database solution with an intuitive ORM for efficient
