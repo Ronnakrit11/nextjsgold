@@ -3,6 +3,7 @@ import { db } from '@/lib/db/drizzle';
 import { userBalances, withdrawalMoneyRequests } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
+import { sendWithdrawalRequestNotification } from '@/lib/telegram/bot';
 
 export async function POST(request: Request) {
   try {
@@ -50,6 +51,15 @@ export async function POST(request: Request) {
         success: true,
         balance: newBalance.balance
       };
+    });
+
+    // Send Telegram notification after transaction is complete
+    await sendWithdrawalRequestNotification({
+      userName: user.name || user.email,
+      amount: Number(amount),
+      bank: bankAccount.bank,
+      accountNumber: bankAccount.accountNumber,
+      accountName: bankAccount.accountName
     });
 
     return NextResponse.json(result);
