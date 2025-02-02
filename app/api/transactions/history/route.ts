@@ -1,22 +1,22 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { transactions, users } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
+import { eq, desc } from 'drizzle-orm';
 
 export async function GET() {
   try {
-    const user = await getUser();
+    const currentUser = await getUser();
     
-    if (!user) {
+    if (!currentUser) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // If admin (ronnakritnook1@gmail.com), fetch all transactions
-    if (user.email === 'ronnakritnook1@gmail.com') {
+    // If admin, fetch all transactions with user details
+    if (currentUser.role === 'admin') {
       const allTransactions = await db
         .select({
           id: transactions.id,
@@ -51,7 +51,7 @@ export async function GET() {
         createdAt: transactions.createdAt,
       })
       .from(transactions)
-      .where(eq(transactions.userId, user.id))
+      .where(eq(transactions.userId, currentUser.id))
       .orderBy(desc(transactions.createdAt));
 
     return NextResponse.json(userTransactions);

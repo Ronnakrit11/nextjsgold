@@ -21,17 +21,21 @@ export default function HomePage() {
                 ระบบออมทอง ซื้อขายทองรูปพรรณ อัพเดทราคาเเบบเรียลไทม์
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0 flex gap-4">
-                <Link href="/sign-in">
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full text-lg px-8 py-4 inline-flex items-center justify-center">
-                    เข้าสู่ระบบ
-                  </Button>
-                </Link>
-                <Link href="/sign-up">
-                  <Button className="bg-white hover:bg-gray-100 text-black border border-gray-200 rounded-full text-lg px-8 py-4 inline-flex items-center justify-center">
-                   สมัคร
+                <Button
+                  asChild
+                  className="bg-orange-500 hover:bg-orange-600 text-white rounded-full text-lg px-8 py-4 inline-flex items-center justify-center"
+                >
+                  <Link href="/sign-in">เข้าสู่ระบบ</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="bg-white hover:bg-gray-100 text-black border border-gray-200 rounded-full text-lg px-8 py-4 inline-flex items-center justify-center"
+                >
+                  <Link href="/sign-up">
+                    สมัคร
                     <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
             <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">

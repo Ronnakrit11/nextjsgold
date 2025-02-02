@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon, Moon, Sun, Package, BookOpen, ShoppingBag } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCircle, Coins, Wallet, BarChart2, FileText, Globe, LogOut, ClipboardList, History, Key, CreditCard, BanknoteIcon, Moon, Sun, Package, BookOpen, ShoppingBag, PiggyBank } from 'lucide-react';
 import { useUser } from '@/lib/auth';
 import { SocialContacts } from '@/components/SocialContacts';
 import { useTheme } from '@/lib/theme-provider';
@@ -60,6 +60,8 @@ export default function DashboardLayout({
     const adminItems = [
       { href: '/dashboard/set-price', icon: Settings, label: 'กำหนดราคา' },
       { href: '/dashboard/customers', icon: UserCircle, label: 'ลูกค้าทั้งหมด' },
+      { href: '/dashboard/transactions-history', icon: FileText, label: 'รายการซื้อขายทอง' },
+      { href: '/dashboard/savings-summary', icon: PiggyBank, label: 'สรุปการออม' },
       { href: '/dashboard/withdraw-money-requests', icon: BanknoteIcon, label: 'รายการขอถอนเงิน' },
       { href: '/dashboard/withdraw-list', icon: ClipboardList, label: 'รายการขอรับทอง' },
       { href: '/dashboard/website-settings', icon: Globe, label: 'จัดการเว็บไซต์' },
