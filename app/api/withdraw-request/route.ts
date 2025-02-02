@@ -3,6 +3,7 @@ import { db } from '@/lib/db/drizzle';
 import { withdrawalRequests, goldAssets } from '@/lib/db/schema';
 import { getUser } from '@/lib/db/queries';
 import { and, eq, sql } from 'drizzle-orm';
+import { sendGoldWithdrawalNotification } from '@/lib/telegram/bot';
 
 export async function POST(request: Request) {
   try {
@@ -72,6 +73,16 @@ export async function POST(request: Request) {
           )
         )
         .limit(1);
+
+      // Send Telegram notification
+      await sendGoldWithdrawalNotification({
+        userName: user.name || user.email,
+        goldType,
+        amount: Number(amount),
+        name,
+        tel,
+        address
+      });
 
       return {
         success: true,
