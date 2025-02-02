@@ -17,7 +17,7 @@ import {
   invitations,
   bankAccounts,
 } from '@/lib/db/schema';
-import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
+import { comparePasswords, hashPassword, setSession, deleteSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createCheckoutSession } from '@/lib/payments/stripe';
@@ -228,10 +228,18 @@ export const signUp = validatedAction(signUpSchema, async (data, formData): Prom
 });
 
 export async function signOut() {
-  const user = (await getUser()) as User;
-  const userWithTeam = await getUserWithTeam(user.id);
-  await logActivity(userWithTeam?.teamId, user.id, ActivityType.SIGN_OUT);
-  (await cookies()).delete('session');
+  try {
+    const user = await getUser();
+    if (user) {
+      const userWithTeam = await getUserWithTeam(user.id);
+      await logActivity(userWithTeam?.teamId, user.id, ActivityType.SIGN_OUT);
+    }
+    await deleteSession();
+    redirect('/');
+  } catch (error) {
+    console.error('Error during sign out:', error);
+    redirect('/');
+  }
 }
 
 const updatePasswordSchema = z
