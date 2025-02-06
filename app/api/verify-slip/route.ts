@@ -3,6 +3,7 @@ import { db } from '@/lib/db/drizzle';
 import { verifiedSlips, userBalances } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
+import { sendDepositNotification } from '@/lib/telegram/bot';
 
 const API_URL = 'https://developer.easyslip.com/api/v1/verify';
 const API_KEY = process.env.EASYSLIP_API_KEY;
@@ -235,12 +236,21 @@ export async function POST(request: Request) {
         );
       }
 
-      // Record the verified slip
+      // Record the verified slip and update user balance
       await recordVerifiedSlip(
         data.data.transRef,
         data.data.amount.amount,
         user?.id || null
       );
+
+      // Send Telegram notification
+      if (user) {
+        await sendDepositNotification({
+          userName: user.name || user.email,
+          amount: data.data.amount.amount,
+          transRef: data.data.transRef
+        });
+      }
     }
 
     return NextResponse.json({ status: 200, message: 'success' });
